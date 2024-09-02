@@ -133,7 +133,12 @@ namespace Chameleon
                         SetUpFancyEntranceDoors(new Vector3(50.5449982f, -16.8225021f, -152.716583f), Quaternion.Euler(-90f, 180f, 64.342f));
                         break;
                     case "DineLevel":
-                        SetUpFancyEntranceDoors(new Vector3(-120.620003f, -16.6870003f, -5.80000019f), Quaternion.Euler(-90f, 0f, 87.213f));
+                        // beta
+                        if (GameNetworkManager.Instance.gameVersionNum % 9999 >= 64)
+                            SetUpFancyEntranceDoors(new Vector3(-120.709869f, -16.3370018f, -4.26810265f), Quaternion.Euler(-90f, 0f, 90.836f));
+                        // public
+                        else
+                            SetUpFancyEntranceDoors(new Vector3(-120.620003f, -16.6870003f, -5.80000019f), Quaternion.Euler(-90f, 0f, 87.213f));
                         break;
                     case "TitanLevel":
                         SetUpFancyEntranceDoors(new Vector3(-35.8769989f, 47.64f, 8.93900013f), Quaternion.Euler(-90f, 0f, 35.333f));
