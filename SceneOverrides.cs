@@ -2,30 +2,30 @@
 using DunGen;
 using System.IO;
 using System.Reflection;
+using System.Linq;
 using UnityEngine;
+using Chameleon.Info;
 
 namespace Chameleon
 {
     internal static class SceneOverrides
     {
-        static readonly Color ECLIPSE_BACKGROUND = new(0.4901961f, 0.3336095f, 0.2254902f), WITCHES_BACKGROUND = new(0.4901961f, 0.4693464f, 0.3764706f), BLIZZARD_BACKGROUND = new(0.4845f, 0.4986666f, 0.51f), AMETHYST_BACKGROUND = new(0.4901961f, 0.3714178f, 0.3578431f);
-
         internal static bool done;
+        internal static bool forceRainy;
+        internal static bool forceStormy;
 
         static GameObject artificeBlizzard;
-        static Transform wideDoorFrameClone;
 
-        internal static void ExteriorOverrides(GameObject mapPropsContainer)
+        internal static void ExteriorOverrides()
         {
             if (Plugin.configRecolorRandomRocks.Value && IsSnowLevel())
             {
-                if (mapPropsContainer == null)
-                    mapPropsContainer = GameObject.FindGameObjectWithTag("MapPropsContainer");
+                if (RoundManager.Instance.mapPropsContainer == null)
+                    RoundManager.Instance.mapPropsContainer = GameObject.FindGameObjectWithTag("MapPropsContainer");
 
-                if (mapPropsContainer != null)
+                if (RoundManager.Instance.mapPropsContainer != null)
                 {
-                    bool retex = false;
-                    foreach (Transform mapProp in mapPropsContainer.transform)
+                    foreach (Transform mapProp in RoundManager.Instance.mapPropsContainer.transform)
                     {
                         if (mapProp.name.StartsWith("LargeRock"))
                         {
@@ -33,174 +33,149 @@ namespace Chameleon
                             {
                                 rend.material.SetTexture("_MainTex", null);
                                 rend.material.SetTexture("_BaseColorMap", null);
-                                retex = true;
                             }
                         }
                     }
-                    if (retex)
-                        Plugin.Logger.LogDebug($"Skinned boulders for snowy moon \"{StartOfRound.Instance.currentLevel.PlanetName}\"");
                 }
+            }
+
+            if (StartOfRound.Instance.currentLevel.name == "CompanyBuildingLevel")
+            {
+                if (Plugin.configStormyGordion.Value && TimeOfDay.Instance.timesFulfilledQuota > 0)
+                {
+                    int totalScrap = 0;
+                    foreach (GrabbableObject item in Object.FindObjectsOfType<GrabbableObject>())
+                        if (item.itemProperties.isScrap)
+                            totalScrap += item.scrapValue;
+
+                    float chance = 0.7f;
+                    if (totalScrap < TimeOfDay.Instance.profitQuota)
+                        chance += 0.17f;
+
+                    if (new System.Random(StartOfRound.Instance.randomMapSeed).NextDouble() <= chance)
+                        forceStormy = true;
+                }
+            }
+            else if (StartOfRound.Instance.currentLevel.name == "MarchLevel")
+            {
+                if (Plugin.configRainyMarch.Value && StartOfRound.Instance.currentLevel.currentWeather != LevelWeatherType.Stormy && StartOfRound.Instance.currentLevel.currentWeather != LevelWeatherType.Flooded && new System.Random(StartOfRound.Instance.randomMapSeed).NextDouble() <= 0.66f)
+                    forceRainy = true;
             }
         }
 
         internal static void InteriorOverrides()
         {
-            if (RoundManager.Instance.currentDungeonType < 0 || RoundManager.Instance.currentDungeonType >= RoundManager.Instance.dungeonFlowTypes.Length || RoundManager.Instance.dungeonFlowTypes[RoundManager.Instance.currentDungeonType].dungeonFlow?.name != "Level2Flow")
-            {
-                Plugin.Logger.LogDebug("Manor interior did not generate");
+            VanillaLevelsInfo.predefinedLevels.TryGetValue(StartOfRound.Instance.currentLevel.name, out LevelCosmeticInfo currentLevelCosmeticInfo);
 
+            if (RoundManager.Instance?.dungeonGenerator?.Generator?.DungeonFlow == null)
+                return;
+
+            if (RoundManager.Instance.dungeonGenerator.Generator.DungeonFlow.name == "Level2Flow"
+                // scarlet devil mansion
+                || RoundManager.Instance.dungeonGenerator.Generator.DungeonFlow.name == "SDMLevel")
+            {
+                // set up manor doors
+                if (Plugin.configFancyEntranceDoors.Value && currentLevelCosmeticInfo != null)
+                    SetUpFancyEntranceDoors(currentLevelCosmeticInfo);
+            }
+            else
+            {
                 // color background
                 if (Plugin.configDoorLightColors.Value)
                 {
-                    SpriteRenderer lightBehindDoor = GameObject.Find("LightBehindDoor")?.GetComponent<SpriteRenderer>(); //Object.FindObjectsOfType<SpriteRenderer>().FirstOrDefault(spriteRenderer => spriteRenderer.name == "LightBehindDoor");
+                    SpriteRenderer lightBehindDoor = Object.FindObjectsOfType<SpriteRenderer>().FirstOrDefault(spriteRenderer => spriteRenderer.name == "LightBehindDoor");
                     if (lightBehindDoor != null)
                     {
                         if (StartOfRound.Instance.currentLevel.currentWeather == LevelWeatherType.Eclipsed)
-                        {
-                            lightBehindDoor.color = ECLIPSE_BACKGROUND;
-                            Plugin.Logger.LogDebug("Door light - Landed on eclipsed moon");
-                        }
+                            lightBehindDoor.color = DoorLightPalette.ECLIPSE_BACKGROUND;
                         else if (IsSnowLevel())
-                        {
-                            lightBehindDoor.color = BLIZZARD_BACKGROUND;
-                            Plugin.Logger.LogDebug("Door light - Landed on blizzard moon");
-                        }
+                            lightBehindDoor.color = DoorLightPalette.BLIZZARD_BACKGROUND;
+                        else if (currentLevelCosmeticInfo != null)
+                            lightBehindDoor.color = currentLevelCosmeticInfo.doorLightColor;
                         else
-                        {
-                            switch (StartOfRound.Instance.currentLevel.name)
-                            {
-                                case "VowLevel":
-                                case "MarchLevel":
-                                case "AdamanceLevel":
-                                    lightBehindDoor.color = WITCHES_BACKGROUND;
-                                    Plugin.Logger.LogDebug("Door light - Landed on Green Witch");
-                                    break;
-                                case "EmbrionLevel":
-                                    lightBehindDoor.color = AMETHYST_BACKGROUND;
-                                    Plugin.Logger.LogDebug("Door light - Landed on Embrion");
-                                    break;
-                            }
-                        }
+                            Plugin.Logger.LogWarning("Could not recolor door light - No information exists for the current level (Are you playing a custom moon?)");
                     }
                     else
-                        Plugin.Logger.LogWarning("Can't find door light");
+                        Plugin.Logger.LogWarning("Could not recolor door light - GameObject \"LightBehindDoor\" was not found (Are you playing a custom interior?)");
                 }
 
                 // mineshaft retextures
-                if (RoundManager.Instance.currentDungeonType == 4)
+                if (RoundManager.Instance.dungeonGenerator.Generator.DungeonFlow.name == "Level3Flow")
                 {
-                    Plugin.Logger.LogDebug("Mineshaft interior generated");
-                    if (Plugin.configIceCaves.Value && IsSnowLevel())
-                    {
-                        Plugin.Logger.LogDebug("Minetex - Landed on blizzard moon");
-                        RetextureCaverns("icecave", "Snow", true);
-                    }
-                    else if (Plugin.configAmethystCave.Value && StartOfRound.Instance.currentLevel.name == "EmbrionLevel")
-                    {
-                        Plugin.Logger.LogDebug("Minetex - Landed on Embrion"); 
-                        RetextureCaverns("amethystcave", string.Empty, false, true);
-                    }
-                }
-            }
-            // set up manor doors
-            else if (Plugin.configFancyEntranceDoors.Value)
-            {
-                Plugin.Logger.LogDebug("Manor interior generated; import fancy doors");
-                switch (StartOfRound.Instance.currentLevel.name)
-                {
-                    case "ExperimentationLevel":
-                        SetUpFancyEntranceDoors(new Vector3(-113.911003f, 2.89499998f, -17.6700001f), Quaternion.Euler(-90f, 0f, 0f), true);
-                        break;
-                    case "AssuranceLevel":
-                        SetUpFancyEntranceDoors(new Vector3(135.248993f, 6.45200014f, 74.4899979f), Quaternion.Euler(-90f, 180f, 0f));
-                        break;
-                    case "VowLevel":
-                        SetUpFancyEntranceDoors(new Vector3(-29.2789993f, -1.176f, 151.069f), Quaternion.Euler(-90f, 90f, 0f));
-                        break;
-                    case "OffenseLevel":
-                        SetUpFancyEntranceDoors(new Vector3(128.936005f, 16.3500004f, -53.7130013f), Quaternion.Euler(-90f, 180f, -73.621f));
-                        break;
-                    case "MarchLevel":
-                        SetUpFancyEntranceDoors(new Vector3(-158.179993f, -3.95300007f, 21.7080002f), Quaternion.Euler(-90f, 0f, 0f));
-                        break;
-                    case "AdamanceLevel":
-                        SetUpFancyEntranceDoors(new Vector3(-122.031998f, 1.84300005f, -3.6170001f), Quaternion.Euler(-90f, 0f, 0f), true);
-                        break;
-                    case "EmbrionLevel":
-                        SetUpFancyEntranceDoors(new Vector3(-195.470001f, 6.35699987f, -7.82999992f), Quaternion.Euler(-90f, 0f, 39.517f));
-                        break;
-                    case "RendLevel":
-                        SetUpFancyEntranceDoors(new Vector3(50.5449982f, -16.8225021f, -152.716583f), Quaternion.Euler(-90f, 180f, 64.342f));
-                        break;
-                    case "DineLevel":
-                        SetUpFancyEntranceDoors(new Vector3(-120.709869f, -16.3370018f, -4.26810265f), Quaternion.Euler(-90f, 0f, 90.836f));
-                        break;
-                    case "TitanLevel":
-                        SetUpFancyEntranceDoors(new Vector3(-35.8769989f, 47.64f, 8.93900013f), Quaternion.Euler(-90f, 0f, 35.333f));
-                        break;
-                    case "ArtificeLevel":
-                        SetUpFancyEntranceDoors(new Vector3(52.3199997f, -0.665000021f, -156.145996f), Quaternion.Euler(-90f, -90f, 0f));
-                        break;
-                }
-            }
-        }
-
-        static void SetUpFancyEntranceDoors(Vector3 pos, Quaternion rot, bool noFrame = false)
-        {
-            GameObject steelDoorFake = GameObject.Find(StartOfRound.Instance.currentLevel.name == "ExperimentationLevel" ? "SteelDoor (5)" : "SteelDoorFake");
-            GameObject steelDoorFake2 = GameObject.Find(StartOfRound.Instance.currentLevel.name == "ExperimentationLevel" ? "SteelDoor (6)" : "SteelDoorFake (1)");
-            if (steelDoorFake != null && steelDoorFake2 != null)
-            {
-                Transform plane = steelDoorFake.transform.parent.Find("Plane");
-                Transform doorFrame = steelDoorFake.transform.parent.Find("DoorFrame (1)");
-                if (noFrame || (plane != null && doorFrame != null))
-                {
-                    GameObject wideDoorFrame = null;
-                    try
-                    {
-                        AssetBundle fancyEntranceDoors = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "fancyentrancedoors"));
-                        wideDoorFrame = fancyEntranceDoors.LoadAsset<GameObject>("WideDoorFrame");
-                        fancyEntranceDoors.Unload(false);
-                    }
-                    catch
-                    {
-                        Plugin.Logger.LogError("Encountered some error loading assets from bundle \"fancyentrancedoors\". Did you install the plugin correctly?");
-                    }
-
-                    if (wideDoorFrame != null)
-                    {
-                        steelDoorFake.SetActive(false);
-                        steelDoorFake2.SetActive(false);
-
-                        if (wideDoorFrameClone != null)
-                            Object.Destroy(wideDoorFrameClone.gameObject);
-
-                        wideDoorFrameClone = Object.Instantiate(wideDoorFrame, pos, rot, RoundManager.Instance?.mapPropsContainer?.transform).transform;
-
-                        if (noFrame)
-                            wideDoorFrameClone.localScale = new Vector3(wideDoorFrameClone.localScale.x, wideDoorFrameClone.localScale.y * 1.07f, wideDoorFrameClone.localScale.z);
-                        else
-                        {
-                            doorFrame.localScale = new Vector3(doorFrame.localScale.x, doorFrame.localScale.y + 0.05f, doorFrame.localScale.z);
-
-                            plane.localPosition = new Vector3(plane.localPosition.x, plane.localPosition.y - 1f, plane.localPosition.z);
-                            plane.localScale = new Vector3(plane.localScale.x + 0.047f, plane.localScale.y, plane.localScale.z + 0.237f);
-                        }
-
-                        Plugin.Logger.LogDebug($"{StartOfRound.Instance.currentLevel.PlanetName} generated manor; use fancy doors at main entrance");
-                    }
+                    if (IsSnowLevel())
+                        RetextureCaverns(CavernType.Ice);
                     else
-                        Plugin.Logger.LogWarning("The \"FancyEntranceDoors\" setting is enabled, but will be skipped because there was an error loading the manor door assets.");
+                        RetextureCaverns(currentLevelCosmeticInfo != null ? currentLevelCosmeticInfo.cavernType : CavernType.Vanilla);
                 }
-                else
-                    Plugin.Logger.LogWarning("The \"FancyEntranceDoors\" setting is enabled, but will be skipped because the door frame or \"darkness plane\" could not be found.");
             }
-            else
-                Plugin.Logger.LogWarning("The \"FancyEntranceDoors\" setting is enabled, but will be skipped because the factory doors could not be found.");
         }
 
-        static void RetextureCaverns(string assets, string tag = default, bool cleanWater = false, bool noDrips = false)
+        static void SetUpFancyEntranceDoors(LevelCosmeticInfo levelCosmeticInfo)
         {
+            GameObject fakeDoor1 = GameObject.Find(levelCosmeticInfo.fakeDoor1Path);
+            GameObject fakeDoor2 = GameObject.Find(levelCosmeticInfo.fakeDoor2Path);
+            Transform plane = string.IsNullOrEmpty(levelCosmeticInfo.planePath) ? null : GameObject.Find(levelCosmeticInfo.planePath)?.transform;
+            Transform frame = string.IsNullOrEmpty(levelCosmeticInfo.framePath) ? null : GameObject.Find(levelCosmeticInfo.framePath)?.transform;
+
+            if (fakeDoor1 == null || fakeDoor2 == null || (!string.IsNullOrEmpty(levelCosmeticInfo.planePath) && plane == null) || (!string.IsNullOrEmpty(levelCosmeticInfo.framePath) && frame == null))
+            {
+                Plugin.Logger.LogWarning("\"FancyEntranceDoors\" skipped because some GameObjects were missing.");
+                return;
+            }
+
+            GameObject fancyDoors = null;
+            try
+            {
+                AssetBundle fancyEntranceDoors = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "fancyentrancedoors"));
+                fancyDoors = fancyEntranceDoors.LoadAsset<GameObject>("WideDoorFrame");
+                fancyEntranceDoors.Unload(false);
+            }
+            catch
+            {
+                Plugin.Logger.LogError("Encountered some error loading assets from bundle \"fancyentrancedoors\". Did you install the plugin correctly?");
+                return;
+            }
+            if (fancyDoors == null)
+            {
+                Plugin.Logger.LogWarning("\"FancyEntranceDoors\" skipped because fancy door asset was missing.");
+                return;
+            }
+
+            if (RoundManager.Instance.mapPropsContainer == null)
+                RoundManager.Instance.mapPropsContainer = GameObject.FindGameObjectWithTag("MapPropsContainer");
+            if (RoundManager.Instance.mapPropsContainer == null)
+            {
+                Plugin.Logger.LogWarning("\"FancyEntranceDoors\" skipped because disposable prop container did not exist in scene.");
+                return;
+            }
+
+            fakeDoor1.SetActive(false);
+            fakeDoor2.SetActive(false);
+
+            Transform fancyDoorsClone = Object.Instantiate(fancyDoors, levelCosmeticInfo.fancyDoorPos, levelCosmeticInfo.fancyDoorRot, RoundManager.Instance.mapPropsContainer.transform).transform;
+            if (levelCosmeticInfo.fancyDoorScalar != Vector3.one)
+                fancyDoorsClone.localScale = Vector3.Scale(fancyDoorsClone.localScale, levelCosmeticInfo.fancyDoorScalar);
+
+            if (frame != null)
+                frame.localScale = new Vector3(frame.localScale.x, frame.localScale.y + 0.05f, frame.localScale.z);
+
+            if (plane != null)
+            {
+                plane.localPosition += levelCosmeticInfo.planeOffset;
+                plane.localScale = new Vector3(plane.localScale.x + 0.047f, plane.localScale.y, plane.localScale.z + 0.237f);
+            }
+        }
+
+        static void RetextureCaverns(CavernType type)
+        {
+            // in the future... variations for the rock colors?
+            if (type == CavernType.Vanilla)
+                return;
+
+            if ((type == CavernType.Ice && !Plugin.configIceCaves.Value) || (type == CavernType.Amethyst && !Plugin.configAmethystCave.Value) || (type == CavernType.Desert && !Plugin.configDesertCaves.Value) || (type == CavernType.Mesa && !Plugin.configMesaCave.Value))
+                return;
+
+            string assets = type.ToString().ToLower() + "cave";
             Material caveRocks = null, coalMat = null;
             try
             {
@@ -213,69 +188,63 @@ namespace Chameleon
             {
                 Plugin.Logger.LogError($"Encountered some error loading assets from bundle \"{assets}\". Did you install the plugin correctly?");
             }
-
-            if (caveRocks != null)
+            if (caveRocks == null)
             {
-                GameObject dungeonRoot = GameObject.Find("/Systems/LevelGeneration/LevelGenerationRoot");
-                if (dungeonRoot != null)
-                {
-                    foreach (Renderer rend in dungeonRoot.GetComponentsInChildren<Renderer>())
-                    {
-                        if (rend.name == "MineshaftStartTileMesh")
-                        {
-                            Material[] startTileMats = rend.materials;
-                            startTileMats[3] = caveRocks;
-                            rend.materials = startTileMats;
-                        }
-                        else if (rend.sharedMaterial != null)
-                        {
-                            if (rend.sharedMaterial.name.StartsWith("CaveRocks1"))
-                            {
-                                rend.material = caveRocks;
-                                if (rend.CompareTag("Rock") && !string.IsNullOrEmpty(tag))
-                                    rend.tag = tag;
-                            }
-                            else if (cleanWater && rend.name == "Water (1)" && rend.sharedMaterial.name.StartsWith("CaveWater"))
-                            {
-                                rend.material.SetColor("Color_6a9a916e2c84442984edc20c082efe79", new Color(0f, 0.18982977f, 0.20754719f, 0.972549f));
-                                rend.material.SetColor("Color_c9a840f2115c4802ba54d713194f761d", new Color(0.12259702f, 0.1792453f, 0.16491137f, 0.9882353f));
-                                Plugin.Logger.LogDebug("Recolored water in cave tile");
-                            }
-                            else if (coalMat != null && rend.sharedMaterial.name.StartsWith("CoalMat"))
-                            {
-                                rend.material = coalMat;
-                                Plugin.Logger.LogDebug("Retextured coal in minecart");
-                            }
-                        }
-                    }
-
-                    if (noDrips)
-                    {
-                        foreach (LocalPropSet localPropSet in dungeonRoot.GetComponentsInChildren<LocalPropSet>())
-                        {
-                            if (localPropSet.name.StartsWith("WaterDrips"))
-                            {
-                                localPropSet.gameObject.SetActive(false);
-                                Plugin.Logger.LogDebug("Disabled water drips");
-                            }
-                        }
-                    }
-
-                    Plugin.Logger.LogDebug($"Finished mineshaft retexture - \"{assets}\"");
-                }
-                else
-                    Plugin.Logger.LogWarning("Skipping mineshaft retexture because there was an error finding the dungeon object tree.");
-            }
-            else
                 Plugin.Logger.LogWarning("Skipping mineshaft retexture because there was an error loading the replacement material.");
-        }
+                return;
+            }
 
-        internal static void Cleanup()
-        {
-            if (wideDoorFrameClone != null)
-                Object.Destroy(wideDoorFrameClone.gameObject);
+            GameObject dungeonRoot = GameObject.Find("/Systems/LevelGeneration/LevelGenerationRoot");
+            if (dungeonRoot == null)
+            {
+                Plugin.Logger.LogWarning("Skipping mineshaft retexture because there was an error finding the dungeon object tree.");
+                return;
+            }
 
-            done = false;
+            VanillaLevelsInfo.predefinedCaverns.TryGetValue(type, out CavernInfo currentCavernInfo);
+            if (currentCavernInfo == null)
+            {
+                Plugin.Logger.LogWarning("Skipping mineshaft retexture because there was an error finding cavern specifications.");
+                return;
+            }
+
+            foreach (Renderer rend in dungeonRoot.GetComponentsInChildren<Renderer>())
+            {
+                if (rend.name == "MineshaftStartTileMesh")
+                {
+                    Material[] startTileMats = rend.materials;
+                    startTileMats[3] = caveRocks;
+                    rend.materials = startTileMats;
+                }
+                else if (rend.sharedMaterial != null)
+                {
+                    if (rend.sharedMaterial.name.StartsWith(caveRocks.name))
+                    {
+                        rend.material = caveRocks;
+                        if (rend.CompareTag("Rock") && !string.IsNullOrEmpty(currentCavernInfo.tag))
+                            rend.tag = currentCavernInfo.tag;
+                    }
+                    else if (currentCavernInfo.waterColor && rend.name == "Water (1)" && rend.sharedMaterial.name.StartsWith("CaveWater"))
+                    {
+                        rend.material.SetColor("Color_6a9a916e2c84442984edc20c082efe79", currentCavernInfo.waterColor1);
+                        rend.material.SetColor("Color_c9a840f2115c4802ba54d713194f761d", currentCavernInfo.waterColor2);
+                    }
+                    else if (coalMat != null && rend.sharedMaterial.name.StartsWith(coalMat.name))
+                        rend.material = coalMat;
+                }
+            }
+
+            if (currentCavernInfo.noDrips)
+            {
+                foreach (LocalPropSet localPropSet in dungeonRoot.GetComponentsInChildren<LocalPropSet>())
+                {
+                    if (localPropSet.name.StartsWith("WaterDrips"))
+                    {
+                        localPropSet.gameObject.SetActive(false);
+                        Plugin.Logger.LogDebug("Disabled water drips");
+                    }
+                }
+            }
         }
 
         internal static void SetupCompatibility()

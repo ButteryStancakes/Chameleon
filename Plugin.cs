@@ -2,16 +2,18 @@
 using BepInEx.Logging;
 using BepInEx.Configuration;
 using HarmonyLib;
+using UnityEngine.SceneManagement;
+using UnityEngine;
 
 namespace Chameleon
 {
     [BepInPlugin(PLUGIN_GUID, PLUGIN_NAME, PLUGIN_VERSION)]
     public class Plugin : BaseUnityPlugin
     {
-        const string PLUGIN_GUID = "butterystancakes.lethalcompany.chameleon", PLUGIN_NAME = "Chameleon", PLUGIN_VERSION = "1.0.2";
+        const string PLUGIN_GUID = "butterystancakes.lethalcompany.chameleon", PLUGIN_NAME = "Chameleon", PLUGIN_VERSION = "1.1.0";
         internal static new ManualLogSource Logger;
 
-        internal static ConfigEntry<bool> configFancyEntranceDoors, configRecolorRandomRocks, configDoorLightColors, configIceCaves, configAmethystCave;
+        internal static ConfigEntry<bool> configFancyEntranceDoors, configRecolorRandomRocks, configDoorLightColors, configIceCaves, configAmethystCave, configDesertCaves, configMesaCave, configRainyMarch, configStormyGordion;
 
         void Awake()
         {
@@ -26,6 +28,18 @@ namespace Chameleon
                 "RecolorRandomRocks",
                 true,
                 "Recolors random boulders to be white on snowy moons so they blend in better.");
+
+            configRainyMarch = Config.Bind(
+                "Exterior",
+                "RainyMarch",
+                true,
+                "March is constantly rainy, as described in its terminal page. This is purely visual and does not affect quicksand generation.");
+
+            configStormyGordion = Config.Bind(
+                "Exterior",
+                "StormyGordion",
+                true,
+                "Gordion is constantly stormy, as described in its terminal page. This is purely visual and lightning does not strike at The Company.");
 
             configDoorLightColors = Config.Bind(
                 "Interior",
@@ -45,9 +59,28 @@ namespace Chameleon
                 true,
                 "Enable amethyst caves on Embrion.");
 
+            configDesertCaves = Config.Bind(
+                "Interior",
+                "DesertCave",
+                true,
+                "Enable desert caves on Assurance and Offense.");
+
+            configMesaCave = Config.Bind(
+                "Interior",
+                "MesaCave",
+                true,
+                "Enable \"mesa\" caves on Experimentation.");
+
             Logger = base.Logger;
 
             new Harmony(PLUGIN_GUID).PatchAll();
+
+            SceneManager.sceneUnloaded += delegate
+            {
+                SceneOverrides.done = false;
+                SceneOverrides.forceRainy = false;
+                SceneOverrides.forceStormy = false;
+            };
 
             Logger.LogInfo($"{PLUGIN_NAME} v{PLUGIN_VERSION} loaded");
         }
@@ -56,13 +89,6 @@ namespace Chameleon
     [HarmonyPatch]
     class ChameleonPatches
     {
-        [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.ShipHasLeft))]
-        [HarmonyPostfix]
-        static void PostShipHasLeft(StartOfRound __instance)
-        {
-            SceneOverrides.Cleanup();
-        }
-
         [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.FinishGeneratingNewLevelClientRpc))]
         [HarmonyPostfix]
         static void PostFinishGeneratingNewLevelClientRpc(RoundManager __instance)
@@ -72,15 +98,33 @@ namespace Chameleon
             SceneOverrides.done = true;
 
             SceneOverrides.SetupCompatibility();
-            SceneOverrides.ExteriorOverrides(__instance.mapPropsContainer);
+            SceneOverrides.ExteriorOverrides();
             SceneOverrides.InteriorOverrides();
         }
 
-        [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.OnDestroy))]
+        [HarmonyPatch(typeof(TimeOfDay), "Update")]
         [HarmonyPostfix]
-        static void RoundManagerPostOnDestroy(StartOfRound __instance)
+        static void TimeOfDayPostUpdate(TimeOfDay __instance)
         {
-            SceneOverrides.done = false;
+            if (SceneOverrides.forceRainy)
+            {
+                if ((!GameNetworkManager.Instance.localPlayerController.isInsideFactory && !GameNetworkManager.Instance.localPlayerController.isPlayerDead) || (GameNetworkManager.Instance.localPlayerController.spectatedPlayerScript != null && !GameNetworkManager.Instance.localPlayerController.spectatedPlayerScript.isInsideFactory))
+                    __instance.effects[(int)LevelWeatherType.Rainy].effectEnabled = true;
+            }
+            else if (SceneOverrides.forceStormy)
+            {
+                GameObject stormy = __instance.effects[(int)LevelWeatherType.Stormy].effectObject;
+                stormy.transform.position = (GameNetworkManager.Instance.localPlayerController.isPlayerDead ? StartOfRound.Instance.spectateCamera.transform : GameNetworkManager.Instance.localPlayerController.transform).position;
+                stormy.SetActive(true);
+            }
+        }
+
+        [HarmonyPatch(typeof(TimeOfDay), nameof(TimeOfDay.PlayTimeMusicDelayed))]
+        [HarmonyPostfix]
+        static void PostPlayTimeMusicDelayed(TimeOfDay __instance, AudioClip clip)
+        {
+            if (clip == StartOfRound.Instance.companyVisitMusic && SceneOverrides.forceStormy)
+                __instance.TimeOfDayMusic.volume = 1f;
         }
     }
 }
