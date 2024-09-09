@@ -13,7 +13,7 @@ namespace Chameleon
         const string PLUGIN_GUID = "butterystancakes.lethalcompany.chameleon", PLUGIN_NAME = "Chameleon", PLUGIN_VERSION = "1.1.0";
         internal static new ManualLogSource Logger;
 
-        internal static ConfigEntry<bool> configFancyEntranceDoors, configRecolorRandomRocks, configDoorLightColors, configIceCaves, configAmethystCave, configDesertCaves, configMesaCave, configRainyMarch, configStormyGordion;
+        internal static ConfigEntry<bool> configFancyEntranceDoors, configRecolorRandomRocks, configDoorLightColors, configIceCaves, configAmethystCave, configDesertCaves, configMesaCave, configRainyMarch, configStormyGordion, configAdaptiveArtifice, configIcyTitan;
 
         void Awake()
         {
@@ -51,7 +51,7 @@ namespace Chameleon
                 "Interior",
                 "IceCaves",
                 true,
-                "Enable ice caves on blizzard moons. (For vanilla, that is Rend, Dine, and Titan)");
+                "Enable ice caves on blizzard moons.");
 
             configAmethystCave = Config.Bind(
                 "Interior",
@@ -69,7 +69,19 @@ namespace Chameleon
                 "Interior",
                 "MesaCave",
                 true,
-                "Enable \"mesa\" caves on Experimentation.");
+                "Enable \"mesa\" caves on Experimentation and Titan.");
+
+            configIcyTitan = Config.Bind(
+                "Interior",
+                "IcyTitan",
+                false,
+                "Enabling this will make Titan generate ice caves instead of mesa caves.");
+
+            configAdaptiveArtifice = Config.Bind(
+                "Interior",
+                "AdaptiveArtifice",
+                true,
+                "If you have also installed ArtificeBlizzard, you can disable this to force Artifice to use rock caverns even when the surface is snowy.");
 
             Logger = base.Logger;
 
@@ -114,7 +126,9 @@ namespace Chameleon
             else if (SceneOverrides.forceStormy)
             {
                 GameObject stormy = __instance.effects[(int)LevelWeatherType.Stormy].effectObject;
-                stormy.transform.position = (GameNetworkManager.Instance.localPlayerController.isPlayerDead ? StartOfRound.Instance.spectateCamera.transform : GameNetworkManager.Instance.localPlayerController.transform).position;
+                Vector3 stormPos = (GameNetworkManager.Instance.localPlayerController.isPlayerDead ? StartOfRound.Instance.spectateCamera.transform : GameNetworkManager.Instance.localPlayerController.transform).position;
+                stormPos.y = Mathf.Max(stormPos.y, -24f);
+                stormy.transform.position = stormPos;
                 stormy.SetActive(true);
             }
         }

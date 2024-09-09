@@ -10,9 +10,7 @@ namespace Chameleon
 {
     internal static class SceneOverrides
     {
-        internal static bool done;
-        internal static bool forceRainy;
-        internal static bool forceStormy;
+        internal static bool done, forceRainy, forceStormy;
 
         static GameObject artificeBlizzard;
 
@@ -41,16 +39,27 @@ namespace Chameleon
 
             if (StartOfRound.Instance.currentLevel.name == "CompanyBuildingLevel")
             {
-                if (Plugin.configStormyGordion.Value && TimeOfDay.Instance.timesFulfilledQuota > 0)
+                if (Plugin.configStormyGordion.Value && TimeOfDay.Instance.profitQuota > 130)
                 {
+                    float chance = 0.7f;
+
                     int totalScrap = 0;
                     foreach (GrabbableObject item in Object.FindObjectsOfType<GrabbableObject>())
                         if (item.itemProperties.isScrap)
                             totalScrap += item.scrapValue;
 
-                    float chance = 0.7f;
-                    if (totalScrap < TimeOfDay.Instance.profitQuota)
-                        chance += 0.17f;
+                    if (TimeOfDay.Instance.daysUntilDeadline < 1)
+                    {
+                        if (totalScrap < 1)
+                            chance = 0.98f;
+                        else if (totalScrap < TimeOfDay.Instance.profitQuota)
+                            chance += 0.17f;
+                        else if (Mathf.FloorToInt((totalScrap - TimeOfDay.Instance.profitQuota - 75) * 1.2f) + TimeOfDay.Instance.profitQuota >= 1500)
+                            chance = 0.6f;
+                    }
+
+                    if (totalScrap > 0 && !StartOfRound.Instance.levels.Any(level => level.currentWeather != LevelWeatherType.None))
+                        chance *= 0.55f;
 
                     if (new System.Random(StartOfRound.Instance.randomMapSeed).NextDouble() <= chance)
                         forceStormy = true;
@@ -102,7 +111,7 @@ namespace Chameleon
                 // mineshaft retextures
                 if (RoundManager.Instance.dungeonGenerator.Generator.DungeonFlow.name == "Level3Flow")
                 {
-                    if (IsSnowLevel())
+                    if (IsSnowLevel() && (currentLevelCosmeticInfo == null || currentLevelCosmeticInfo.cavernType <= CavernType.Ice || (StartOfRound.Instance.currentLevel.name == "TitanLevel" && Plugin.configIcyTitan.Value)) && (StartOfRound.Instance.currentLevel.name != "ArtificeLevel" || Plugin.configAdaptiveArtifice.Value))
                         RetextureCaverns(CavernType.Ice);
                     else
                         RetextureCaverns(currentLevelCosmeticInfo != null ? currentLevelCosmeticInfo.cavernType : CavernType.Vanilla);
@@ -252,7 +261,7 @@ namespace Chameleon
             if (StartOfRound.Instance.currentLevel.name == "ArtificeLevel" && Chainloader.PluginInfos.ContainsKey("butterystancakes.lethalcompany.artificeblizzard"))
             {
                 artificeBlizzard = GameObject.Find("/Systems/Audio/BlizzardAmbience");
-                if (artificeBlizzard != null)
+                if (artificeBlizzard != null && Plugin.configAdaptiveArtifice.Value)
                     Plugin.Logger.LogInfo("Artifice Blizzard compatibility success");
             }
         }

@@ -75,7 +75,7 @@ namespace Chameleon.Info
                 fancyDoorRot = Quaternion.Euler(-90f, 0f, 35.333f),
                 planeOffset = new(0.03f, -1f, 0.036f),
                 doorLightColor = DoorLightPalette.BLIZZARD_BACKGROUND,
-                cavernType = CavernType.Ice
+                cavernType = CavernType.Mesa
             }},
             { "ArtificeLevel", new(){
                 fakeDoor1Path = "/Environment/MainFactory/SteelDoorFake",
@@ -99,7 +99,9 @@ namespace Chameleon.Info
                 noDrips = true
             }},
             { CavernType.Desert, new() },
-            { CavernType.Mesa, new() },
+            { CavernType.Mesa, new(){
+                tag = "Gravel"
+            }},
         };
     }
 }
