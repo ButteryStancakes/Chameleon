@@ -39,7 +39,9 @@ namespace Chameleon
 
             if (StartOfRound.Instance.currentLevel.name == "CompanyBuildingLevel")
             {
-                if (Plugin.configStormyGordion.Value && TimeOfDay.Instance.profitQuota > 130)
+                if (Plugin.configStormyGordion.Value == GordionStorms.Always)
+                    ActivateGordionStorms();
+                else if (Plugin.configStormyGordion.Value == GordionStorms.Chance && TimeOfDay.Instance.profitQuota > 130)
                 {
                     float chance = 0.7f;
 
@@ -62,7 +64,7 @@ namespace Chameleon
                         chance *= 0.55f;
 
                     if (new System.Random(StartOfRound.Instance.randomMapSeed).NextDouble() <= chance)
-                        forceStormy = true;
+                        ActivateGordionStorms();
                 }
             }
             else if (StartOfRound.Instance.currentLevel.name == "MarchLevel")
@@ -269,6 +271,37 @@ namespace Chameleon
         internal static bool IsSnowLevel()
         {
             return StartOfRound.Instance.currentLevel.levelIncludesSnowFootprints && (artificeBlizzard == null || artificeBlizzard.activeSelf);
+        }
+
+        internal static void ActivateGordionStorms()
+        {
+            forceStormy = true;
+            // fix rain falling through the platform by changing "Colliders" layer to "Room"
+            Transform map = GameObject.Find("/Environment/Map")?.transform;
+            foreach (string collName in new string[]{
+                            "CompanyPlanet/Cube/Colliders/Cube",
+                            "CompanyPlanet/Cube/Colliders/Cube (2)",
+                            "CompanyPlanet/Cube/Colliders/Cube (3)",
+                            "CompanyPlanet/Elbow Joint.001",
+                            "CompanyPlanet/Cube.003",
+                            "ShippingContainers/ShippingContainer",
+                            "ShippingContainers/ShippingContainer (1)",
+                            "ShippingContainers/ShippingContainer (2)",
+                            "ShippingContainers/ShippingContainer (3)",
+                            "ShippingContainers/ShippingContainer (4)",
+                            "ShippingContainers/ShippingContainer (5)",
+                            "ShippingContainers/ShippingContainer (6)",
+                            "ShippingContainers/ShippingContainer (7)",
+                            "ShippingContainers/ShippingContainer (8)",
+                            "ShippingContainers/ShippingContainer (9)",
+                            "ShippingContainers/ShippingContainer (10)",
+                            "CompanyPlanet/Cube.005",
+                        })
+            {
+                Transform coll = map.Find(collName);
+                if (coll != null)
+                    coll.gameObject.layer = 8;
+            }
         }
     }
 }

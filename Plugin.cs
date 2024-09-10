@@ -7,13 +7,21 @@ using UnityEngine;
 
 namespace Chameleon
 {
+    internal enum GordionStorms
+    {
+        Never = -1,
+        Chance,
+        Always
+    }
+
     [BepInPlugin(PLUGIN_GUID, PLUGIN_NAME, PLUGIN_VERSION)]
     public class Plugin : BaseUnityPlugin
     {
-        const string PLUGIN_GUID = "butterystancakes.lethalcompany.chameleon", PLUGIN_NAME = "Chameleon", PLUGIN_VERSION = "1.1.0";
+        const string PLUGIN_GUID = "butterystancakes.lethalcompany.chameleon", PLUGIN_NAME = "Chameleon", PLUGIN_VERSION = "1.1.2";
         internal static new ManualLogSource Logger;
 
-        internal static ConfigEntry<bool> configFancyEntranceDoors, configRecolorRandomRocks, configDoorLightColors, configIceCaves, configAmethystCave, configDesertCaves, configMesaCave, configRainyMarch, configStormyGordion, configAdaptiveArtifice, configIcyTitan;
+        internal static ConfigEntry<bool> configFancyEntranceDoors, configRecolorRandomRocks, configDoorLightColors, configIceCaves, configAmethystCave, configDesertCaves, configMesaCave, configRainyMarch, configAdaptiveArtifice, configIcyTitan;
+        internal static ConfigEntry<GordionStorms> configStormyGordion;
 
         void Awake()
         {
@@ -38,8 +46,8 @@ namespace Chameleon
             configStormyGordion = Config.Bind(
                 "Exterior",
                 "StormyGordion",
-                true,
-                "Gordion is constantly stormy, as described in its terminal page. This is purely visual and lightning does not strike at The Company.");
+                GordionStorms.Chance,
+                "Allows for storms on Gordion, as described in its terminal page. This is purely visual and lightning does not strike at The Company.");
 
             configDoorLightColors = Config.Bind(
                 "Interior",
