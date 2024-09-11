@@ -17,7 +17,7 @@ namespace Chameleon
     [BepInPlugin(PLUGIN_GUID, PLUGIN_NAME, PLUGIN_VERSION)]
     public class Plugin : BaseUnityPlugin
     {
-        const string PLUGIN_GUID = "butterystancakes.lethalcompany.chameleon", PLUGIN_NAME = "Chameleon", PLUGIN_VERSION = "1.1.2";
+        const string PLUGIN_GUID = "butterystancakes.lethalcompany.chameleon", PLUGIN_NAME = "Chameleon", PLUGIN_VERSION = "1.1.3";
         internal static new ManualLogSource Logger;
 
         internal static ConfigEntry<bool> configFancyEntranceDoors, configRecolorRandomRocks, configDoorLightColors, configIceCaves, configAmethystCave, configDesertCaves, configMesaCave, configRainyMarch, configAdaptiveArtifice, configIcyTitan;
