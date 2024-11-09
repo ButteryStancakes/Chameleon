@@ -8,7 +8,8 @@ namespace Chameleon.Info
         Ice,
         Amethyst,
         Desert,
-        Mesa
+        Mesa,
+        Gravel
     }
 
     internal class CavernInfo

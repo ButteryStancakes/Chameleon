@@ -1,97 +1,23 @@
 ﻿using BepInEx;
 using BepInEx.Logging;
-using BepInEx.Configuration;
 using HarmonyLib;
 using UnityEngine.SceneManagement;
 using UnityEngine;
 
 namespace Chameleon
 {
-    internal enum GordionStorms
-    {
-        Never = -1,
-        Chance,
-        Always
-    }
 
     [BepInPlugin(PLUGIN_GUID, PLUGIN_NAME, PLUGIN_VERSION)]
     public class Plugin : BaseUnityPlugin
     {
-        const string PLUGIN_GUID = "butterystancakes.lethalcompany.chameleon", PLUGIN_NAME = "Chameleon", PLUGIN_VERSION = "1.1.3";
+        const string PLUGIN_GUID = "butterystancakes.lethalcompany.chameleon", PLUGIN_NAME = "Chameleon", PLUGIN_VERSION = "1.2.0";
         internal static new ManualLogSource Logger;
-
-        internal static ConfigEntry<bool> configFancyEntranceDoors, configRecolorRandomRocks, configDoorLightColors, configIceCaves, configAmethystCave, configDesertCaves, configMesaCave, configRainyMarch, configAdaptiveArtifice, configIcyTitan;
-        internal static ConfigEntry<GordionStorms> configStormyGordion;
 
         void Awake()
         {
-            configFancyEntranceDoors = Config.Bind(
-                "Exterior",
-                "FancyEntranceDoors",
-                true,
-                "Changes the front doors to match how they look on the inside when a manor interior generates. (Works for ONLY vanilla levels!)");
-
-            configRecolorRandomRocks = Config.Bind(
-                "Exterior",
-                "RecolorRandomRocks",
-                true,
-                "Recolors random boulders to be white on snowy moons so they blend in better.");
-
-            configRainyMarch = Config.Bind(
-                "Exterior",
-                "RainyMarch",
-                true,
-                "March is constantly rainy, as described in its terminal page. This is purely visual and does not affect quicksand generation.");
-
-            configStormyGordion = Config.Bind(
-                "Exterior",
-                "StormyGordion",
-                GordionStorms.Chance,
-                "Allows for storms on Gordion, as described in its terminal page. This is purely visual and lightning does not strike at The Company.");
-
-            configDoorLightColors = Config.Bind(
-                "Interior",
-                "DoorLightColors",
-                true,
-                "Dynamically adjust the color of the light behind the entrance doors depending on where you land and the current weather.");
-
-            configIceCaves = Config.Bind(
-                "Interior",
-                "IceCaves",
-                true,
-                "Enable ice caves on blizzard moons.");
-
-            configAmethystCave = Config.Bind(
-                "Interior",
-                "AmethystCave",
-                true,
-                "Enable amethyst caves on Embrion.");
-
-            configDesertCaves = Config.Bind(
-                "Interior",
-                "DesertCave",
-                true,
-                "Enable desert caves on Assurance and Offense.");
-
-            configMesaCave = Config.Bind(
-                "Interior",
-                "MesaCave",
-                true,
-                "Enable \"mesa\" caves on Experimentation and Titan.");
-
-            configIcyTitan = Config.Bind(
-                "Interior",
-                "IcyTitan",
-                false,
-                "Enabling this will make Titan generate ice caves instead of mesa caves.");
-
-            configAdaptiveArtifice = Config.Bind(
-                "Interior",
-                "AdaptiveArtifice",
-                true,
-                "If you have also installed ArtificeBlizzard, you can disable this to force Artifice to use rock caverns even when the surface is snowy.");
-
             Logger = base.Logger;
+
+            Configuration.Init(Config);
 
             new Harmony(PLUGIN_GUID).PatchAll();
 
@@ -119,7 +45,8 @@ namespace Chameleon
 
             SceneOverrides.SetupCompatibility();
             SceneOverrides.ExteriorOverrides();
-            SceneOverrides.InteriorOverrides();
+            if (StartOfRound.Instance.currentLevel.name != "CompanyBuildingLevel")
+                SceneOverrides.InteriorOverrides();
         }
 
         [HarmonyPatch(typeof(TimeOfDay), "Update")]
@@ -147,6 +74,29 @@ namespace Chameleon
         {
             if (clip == StartOfRound.Instance.companyVisitMusic && SceneOverrides.forceStormy)
                 __instance.TimeOfDayMusic.volume = 1f;
+        }
+
+        [HarmonyPatch(typeof(SoundManager), nameof(SoundManager.PlayRandomOutsideMusic))]
+        [HarmonyPrefix]
+        static bool PrePlayRandomOutsideMusic(SoundManager __instance)
+        {
+            return StartOfRound.Instance.currentLevel.currentWeather != LevelWeatherType.Eclipsed;
+        }
+
+        [HarmonyPatch(typeof(HUDManager), "HelmetCondensationDrops")]
+        [HarmonyPostfix]
+        static void PostHelmetCondensationDrops(HUDManager __instance)
+        {
+            if (!__instance.increaseHelmetCondensation && SceneOverrides.forceStormy && !TimeOfDay.Instance.insideLighting && GameNetworkManager.Instance.localPlayerController.transform.position.y >= -5.5f && Vector3.Angle(GameNetworkManager.Instance.localPlayerController.gameplayCamera.transform.forward, Vector3.up) < 45f)
+                __instance.increaseHelmetCondensation = true;
+        }
+
+        [HarmonyPatch(typeof(StartOfRound), "Start")]
+        [HarmonyPostfix]
+        [HarmonyPriority(Priority.Last)]
+        static void StartOfRoundPostStart()
+        {
+            SceneOverrides.BuildWeightLists();
         }
     }
 }

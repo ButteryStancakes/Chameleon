@@ -1,10 +1,11 @@
-﻿using BepInEx.Bootstrap;
-using DunGen;
+﻿using DunGen;
 using System.IO;
 using System.Reflection;
 using System.Linq;
 using UnityEngine;
 using Chameleon.Info;
+using BepInEx.Bootstrap;
+using System.Collections.Generic;
 
 namespace Chameleon
 {
@@ -13,10 +14,11 @@ namespace Chameleon
         internal static bool done, forceRainy, forceStormy;
 
         static GameObject artificeBlizzard;
+        static Dictionary<string, IntWithRarity[]> mineshaftWeightLists = [];
 
         internal static void ExteriorOverrides()
         {
-            if (Plugin.configRecolorRandomRocks.Value && IsSnowLevel())
+            if (Configuration.recolorRandomRocks.Value && IsSnowLevel())
             {
                 if (RoundManager.Instance.mapPropsContainer == null)
                     RoundManager.Instance.mapPropsContainer = GameObject.FindGameObjectWithTag("MapPropsContainer");
@@ -40,9 +42,10 @@ namespace Chameleon
             if (StartOfRound.Instance.currentLevel.name == "CompanyBuildingLevel")
             {
                 // fix rain falling through the platform by changing "Colliders" layer to "Room"
-                // NOTE: this also fixes the radar. so always do this(?)
+                // NOTE: this also fixes the radar. so always do this
                 Transform map = GameObject.Find("/Environment/Map")?.transform;
                 foreach (string collName in new string[]{
+                    "CompanyPlanet/Cube",
                     "CompanyPlanet/Cube/Colliders/Cube",
                     "CompanyPlanet/Cube/Colliders/Cube (2)",
                     "CompanyPlanet/Cube/Colliders/Cube (3)",
@@ -60,21 +63,33 @@ namespace Chameleon
                     "ShippingContainers/ShippingContainer (9)",
                     "ShippingContainers/ShippingContainer (10)",
                     "CompanyPlanet/Cube.005",
+                    // just for radar
+                    "CompanyPlanet/CatwalkChunk",
+                    "CompanyPlanet/CatwalkChunk.001",
+                    "CompanyPlanet/CatwalkStairTile",
+                    "CompanyPlanet/Cylinder",
+                    "CompanyPlanet/Cylinder.001",
+                    "CompanyPlanet/LargePipeSupportBeam",
+                    "CompanyPlanet/LargePipeSupportBeam.001",
+                    "CompanyPlanet/LargePipeSupportBeam.002",
+                    "CompanyPlanet/LargePipeSupportBeam.003",
+                    "CompanyPlanet/Scaffolding",
+                    "CompanyPlanet/Scaffolding.001",
+                    "GiantDrill/DrillMainBody",
                 })
                 {
                     Transform coll = map.Find(collName);
                     if (coll != null)
                     {
-                        coll.gameObject.layer = 8;
-                        Renderer rend = coll.GetComponent<Renderer>();
-                        if (rend != null && rend.sharedMaterial.name.StartsWith("testTrigger"))
+                        if (coll.gameObject.layer == 11 && coll.TryGetComponent(out Renderer rend))
                             rend.enabled = false;
+                        coll.gameObject.layer = 8;
                     }
                 }
 
-                if (Plugin.configStormyGordion.Value == GordionStorms.Always)
+                if (Configuration.stormyGordion.Value == Configuration.GordionStorms.Always)
                     forceStormy = true;
-                else if (Plugin.configStormyGordion.Value == GordionStorms.Chance && TimeOfDay.Instance.profitQuota > 130)
+                else if (Configuration.stormyGordion.Value == Configuration.GordionStorms.Chance && TimeOfDay.Instance.profitQuota > 130)
                 {
                     float chance = 0.7f;
 
@@ -93,7 +108,7 @@ namespace Chameleon
                             chance = 0.6f;
                     }
 
-                    if (totalScrap > 0 && !StartOfRound.Instance.levels.Any(level => level.currentWeather != LevelWeatherType.None))
+                    if (totalScrap > (TimeOfDay.Instance.profitQuota - 75) && !StartOfRound.Instance.levels.Any(level => level.currentWeather != LevelWeatherType.None))
                         chance *= 0.55f;
 
                     if (new System.Random(StartOfRound.Instance.randomMapSeed).NextDouble() <= chance)
@@ -102,7 +117,10 @@ namespace Chameleon
             }
             else if (StartOfRound.Instance.currentLevel.name == "MarchLevel")
             {
-                if (Plugin.configRainyMarch.Value && StartOfRound.Instance.currentLevel.currentWeather != LevelWeatherType.Stormy && StartOfRound.Instance.currentLevel.currentWeather != LevelWeatherType.Flooded && new System.Random(StartOfRound.Instance.randomMapSeed).NextDouble() <= 0.66f)
+                float rainChance = 0.66f;
+                if (StartOfRound.Instance.currentLevel.currentWeather == LevelWeatherType.Foggy)
+                    rainChance *= 0.5f;
+                if (Configuration.rainyMarch.Value && StartOfRound.Instance.currentLevel.currentWeather != LevelWeatherType.Stormy && StartOfRound.Instance.currentLevel.currentWeather != LevelWeatherType.Flooded && new System.Random(StartOfRound.Instance.randomMapSeed).NextDouble() <= rainChance)
                     forceRainy = true;
             }
         }
@@ -119,13 +137,13 @@ namespace Chameleon
                 || RoundManager.Instance.dungeonGenerator.Generator.DungeonFlow.name == "SDMLevel")
             {
                 // set up manor doors
-                if (Plugin.configFancyEntranceDoors.Value && currentLevelCosmeticInfo != null)
+                if (Configuration.fancyEntranceDoors.Value && currentLevelCosmeticInfo != null)
                     SetUpFancyEntranceDoors(currentLevelCosmeticInfo);
             }
             else
             {
                 // color background
-                if (Plugin.configDoorLightColors.Value)
+                if (Configuration.doorLightColors.Value)
                 {
                     SpriteRenderer lightBehindDoor = Object.FindObjectsOfType<SpriteRenderer>().FirstOrDefault(spriteRenderer => spriteRenderer.name == "LightBehindDoor");
                     if (lightBehindDoor != null)
@@ -137,19 +155,31 @@ namespace Chameleon
                         else if (currentLevelCosmeticInfo != null)
                             lightBehindDoor.color = currentLevelCosmeticInfo.doorLightColor;
                         else
-                            Plugin.Logger.LogWarning("Could not recolor door light - No information exists for the current level (Are you playing a custom moon?)");
+                            Plugin.Logger.LogDebug("Could not recolor door light - No information exists for the current level (Are you playing a custom moon?)");
                     }
                     else
-                        Plugin.Logger.LogWarning("Could not recolor door light - GameObject \"LightBehindDoor\" was not found (Are you playing a custom interior?)");
+                        Plugin.Logger.LogDebug("Could not recolor door light - GameObject \"LightBehindDoor\" was not found (Are you playing a custom interior?)");
                 }
 
                 // mineshaft retextures
                 if (RoundManager.Instance.dungeonGenerator.Generator.DungeonFlow.name == "Level3Flow")
                 {
-                    if (IsSnowLevel() && (currentLevelCosmeticInfo == null || currentLevelCosmeticInfo.cavernType <= CavernType.Ice || (StartOfRound.Instance.currentLevel.name == "TitanLevel" && Plugin.configIcyTitan.Value)) && (StartOfRound.Instance.currentLevel.name != "ArtificeLevel" || Plugin.configAdaptiveArtifice.Value))
-                        RetextureCaverns(CavernType.Ice);
+                    if (mineshaftWeightLists.TryGetValue(StartOfRound.Instance.currentLevel.name, out IntWithRarity[] mineshaftWeightList))
+                    {
+                        // converts the weighted list into an array of integers, then selects an index based on weight
+                        int typeID = mineshaftWeightList[RoundManager.Instance.GetRandomWeightedIndex(mineshaftWeightList.Select(x => x.rarity).ToArray(), new System.Random(StartOfRound.Instance.randomMapSeed))].id;
+
+                        // convert the ID to a CavernType and apply
+                        if (System.Enum.IsDefined(typeof(CavernType), typeID))
+                        {
+                            if (typeID > (int)CavernType.Vanilla)
+                                RetextureCaverns((CavernType)typeID);
+                        }
+                        else
+                            Plugin.Logger.LogWarning("Tried to assign an unknown cavern type. This shouldn't happen! (Falling back to vanilla caverns)");
+                    }
                     else
-                        RetextureCaverns(currentLevelCosmeticInfo != null ? currentLevelCosmeticInfo.cavernType : CavernType.Vanilla);
+                        Plugin.Logger.LogDebug("No custom cave weights were defined for the current moon. Falling back to vanilla caverns");
                 }
             }
         }
@@ -212,13 +242,6 @@ namespace Chameleon
 
         static void RetextureCaverns(CavernType type)
         {
-            // in the future... variations for the rock colors?
-            if (type == CavernType.Vanilla)
-                return;
-
-            if ((type == CavernType.Ice && !Plugin.configIceCaves.Value) || (type == CavernType.Amethyst && !Plugin.configAmethystCave.Value) || (type == CavernType.Desert && !Plugin.configDesertCaves.Value) || (type == CavernType.Mesa && !Plugin.configMesaCave.Value))
-                return;
-
             string assets = type.ToString().ToLower() + "cave";
             Material caveRocks = null, coalMat = null;
             try
@@ -271,7 +294,7 @@ namespace Chameleon
                     else if (currentCavernInfo.waterColor && rend.name == "Water (1)" && rend.sharedMaterial.name.StartsWith("CaveWater"))
                     {
                         rend.material.SetColor("Color_6a9a916e2c84442984edc20c082efe79", currentCavernInfo.waterColor1);
-                        rend.material.SetColor("Color_c9a840f2115c4802ba54d713194f761d", currentCavernInfo.waterColor2);
+                        rend.sharedMaterial.SetColor("Color_c9a840f2115c4802ba54d713194f761d", currentCavernInfo.waterColor2);
                     }
                     else if (coalMat != null && rend.sharedMaterial.name.StartsWith(coalMat.name))
                         rend.material = coalMat;
@@ -296,7 +319,7 @@ namespace Chameleon
             if (StartOfRound.Instance.currentLevel.name == "ArtificeLevel" && Chainloader.PluginInfos.ContainsKey("butterystancakes.lethalcompany.artificeblizzard"))
             {
                 artificeBlizzard = GameObject.Find("/Systems/Audio/BlizzardAmbience");
-                if (artificeBlizzard != null && Plugin.configAdaptiveArtifice.Value)
+                if (artificeBlizzard != null)
                     Plugin.Logger.LogInfo("Artifice Blizzard compatibility success");
             }
         }
@@ -304,6 +327,38 @@ namespace Chameleon
         internal static bool IsSnowLevel()
         {
             return StartOfRound.Instance.currentLevel.levelIncludesSnowFootprints && (artificeBlizzard == null || artificeBlizzard.activeSelf);
+        }
+
+        internal static void BuildWeightLists()
+        {
+            mineshaftWeightLists.Clear();
+
+            Plugin.Logger.LogInfo("List of all indexed moons (Use this to set up your config!):");
+            foreach (SelectableLevel level in StartOfRound.Instance.levels)
+                Plugin.Logger.LogInfo($"\"{level.name}\"");
+
+            Plugin.Logger.LogDebug("Now assembling final weighted lists");
+            foreach (SelectableLevel level in StartOfRound.Instance.levels)
+            {
+                try
+                {
+                    List<IntWithRarity> tempWeights = [];
+                    foreach (Configuration.MoonCavernMapping mapping in Configuration.mappings.Where(x => level.name.ToLower().StartsWith(x.moon)))
+                    {
+                        tempWeights.Add(new()
+                        {
+                            id = (int)mapping.type,
+                            rarity = mapping.weight
+                        });
+                        Plugin.Logger.LogDebug($"{level.name} - {mapping.type} @ {mapping.weight}");
+                    }
+                    mineshaftWeightLists.Add(level.name, tempWeights.ToArray());
+                }
+                catch
+                {
+                    Plugin.Logger.LogError("Failed to finish assembling weighted lists. If you are encountering this error, it's likely there is a problem with your config - look for warnings further up in your log!");
+                }
+            }
         }
     }
 }
