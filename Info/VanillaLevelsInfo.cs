@@ -96,7 +96,10 @@ namespace Chameleon.Info
                 tag = "Gravel"
             }},
             { CavernType.Gravel, new(){
-                tag = "Gravel"
+                tag = "Gravel",
+                waterColor = true,
+                waterColor1 = new Color(0.25098039215f, 0.26274509803f, 0.27843137254f, 0.972549f),
+                waterColor2 = new Color(0.16470588235f, 0.14901960784f, 0.1725490196f, 0.9882353f)
             }}
         };
     }

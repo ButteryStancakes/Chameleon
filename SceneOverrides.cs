@@ -335,11 +335,17 @@ namespace Chameleon
 
             Plugin.Logger.LogInfo("List of all indexed moons (Use this to set up your config!):");
             foreach (SelectableLevel level in StartOfRound.Instance.levels)
-                Plugin.Logger.LogInfo($"\"{level.name}\"");
+            {
+                if (level.name != "CompanyBuildingLevel")
+                    Plugin.Logger.LogInfo($"\"{level.name}\"");
+            }
 
             Plugin.Logger.LogDebug("Now assembling final weighted lists");
             foreach (SelectableLevel level in StartOfRound.Instance.levels)
             {
+                if (level.name == "CompanyBuildingLevel")
+                    continue;
+
                 try
                 {
                     List<IntWithRarity> tempWeights = [];

@@ -80,7 +80,7 @@ namespace Chameleon
         [HarmonyPrefix]
         static bool PrePlayRandomOutsideMusic(SoundManager __instance)
         {
-            return StartOfRound.Instance.currentLevel.currentWeather != LevelWeatherType.Eclipsed;
+            return !Configuration.eclipsesBlockMusic.Value || StartOfRound.Instance.currentLevel.currentWeather != LevelWeatherType.Eclipsed;
         }
 
         [HarmonyPatch(typeof(HUDManager), "HelmetCondensationDrops")]
