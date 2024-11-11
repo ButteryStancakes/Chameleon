@@ -167,16 +167,22 @@ namespace Chameleon
                     if (mineshaftWeightLists.TryGetValue(StartOfRound.Instance.currentLevel.name, out IntWithRarity[] mineshaftWeightList))
                     {
                         // converts the weighted list into an array of integers, then selects an index based on weight
-                        int typeID = mineshaftWeightList[RoundManager.Instance.GetRandomWeightedIndex(mineshaftWeightList.Select(x => x.rarity).ToArray(), new System.Random(StartOfRound.Instance.randomMapSeed))].id;
-
-                        // convert the ID to a CavernType and apply
-                        if (System.Enum.IsDefined(typeof(CavernType), typeID))
+                        int index = RoundManager.Instance.GetRandomWeightedIndex(mineshaftWeightList.Select(x => x.rarity).ToArray(), new System.Random(StartOfRound.Instance.randomMapSeed));
+                        if (index >= 0 && index < mineshaftWeightList.Length)
                         {
-                            if (typeID > (int)CavernType.Vanilla)
-                                RetextureCaverns((CavernType)typeID);
+                            int typeID = mineshaftWeightList[index].id;
+
+                            // convert the ID to a CavernType and apply
+                            if (System.Enum.IsDefined(typeof(CavernType), typeID))
+                            {
+                                if (typeID > (int)CavernType.Vanilla)
+                                    RetextureCaverns((CavernType)typeID);
+                            }
+                            else
+                                Plugin.Logger.LogWarning("Tried to assign an unknown cavern type. This shouldn't happen! (Falling back to vanilla caverns)");
                         }
                         else
-                            Plugin.Logger.LogWarning("Tried to assign an unknown cavern type. This shouldn't happen! (Falling back to vanilla caverns)");
+                            Plugin.Logger.LogWarning("An error occurred indexing a random cavern type. This shouldn't happen! (Falling back to vanilla caverns)");
                     }
                     else
                         Plugin.Logger.LogDebug("No custom cave weights were defined for the current moon. Falling back to vanilla caverns");
@@ -358,7 +364,8 @@ namespace Chameleon
                         });
                         Plugin.Logger.LogDebug($"{level.name} - {mapping.type} @ {mapping.weight}");
                     }
-                    mineshaftWeightLists.Add(level.name, tempWeights.ToArray());
+                    if (tempWeights.Count > 0)
+                        mineshaftWeightLists.Add(level.name, tempWeights.ToArray());
                 }
                 catch
                 {
