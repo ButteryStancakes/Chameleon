@@ -91,7 +91,7 @@ namespace Chameleon
         static void InteriorManorConfig()
         {
             powerOffWindows = configFile.Bind(
-                "Interior",
+                "Interior.Manor",
                 "PowerOffWindows",
                 true,
                 "When the breaker box is turned off, the \"fake window\" rooms will also turn off.");
