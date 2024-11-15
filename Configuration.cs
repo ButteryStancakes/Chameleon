@@ -23,7 +23,7 @@ namespace Chameleon
 
         static ConfigFile configFile;
 
-        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic;
+        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows;
         internal static ConfigEntry<GordionStorms> stormyGordion;
 
         internal static List<MoonCavernMapping> mappings = [];
@@ -78,7 +78,23 @@ namespace Chameleon
                 true,
                 "Dynamically adjust the color of the light behind the entrance doors depending on where you land and the current weather.");
 
+            powerOffBreakerBox = configFile.Bind(
+                "Interior",
+                "PowerOffBreakerBox",
+                true,
+                "When the apparatus is unplugged, the light on the breaker box will turn off to indicate it is inactive.");
+
+            InteriorManorConfig();
             InteriorMineshaftConfig();
+        }
+
+        static void InteriorManorConfig()
+        {
+            powerOffWindows = configFile.Bind(
+                "Interior",
+                "PowerOffWindows",
+                true,
+                "When the breaker box is turned off, the \"fake window\" rooms will also turn off.");
         }
 
         static void InteriorMineshaftConfig()
@@ -89,6 +105,12 @@ namespace Chameleon
             PopulateGlobalListWithCavernType(CavernType.Ice, "Rend:100,Dine:100");
             PopulateGlobalListWithCavernType(CavernType.Amethyst, "Embrion:100");
             PopulateGlobalListWithCavernType(CavernType.Gravel, "Artifice:20");
+
+            autoAdaptSnow = configFile.Bind(
+                "Interior.Mineshaft",
+                "AutoAdaptSnow",
+                true,
+                "Automatically enable ice caverns on modded levels that are snowy.\nIf you have Artifice Blizzard installed, this will also change the caverns to ice specifically when the blizzard is active.");
         }
 
         static void PopulateGlobalListWithCavernType(CavernType type, string defaultList)

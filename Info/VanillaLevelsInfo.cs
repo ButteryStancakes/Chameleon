@@ -38,12 +38,6 @@ namespace Chameleon.Info
                 planeOffset = new(0f, -1f, -0.075f),
                 //doorLightColor = DoorLightPalette.WITCHES_BACKGROUND
             }},
-            { "EmbrionLevel", new(){
-                fancyDoorPos = new(-195.470001f, 6.35699987f, -7.82999992f),
-                fancyDoorRot = Quaternion.Euler(-90f, 0f, 39.517f),
-                planeOffset = new(-0.045f, -1f, -0.05513f),
-                doorLightColor = DoorLightPalette.AMETHYST_BACKGROUND
-            }},
             { "AdamanceLevel", new(){
                 fakeDoor1Path = "/Environment/Teleports/EntranceTeleportA/SteelDoorFake",
                 fakeDoor2Path = "/Environment/Teleports/EntranceTeleportA/SteelDoorFake (1)",
@@ -53,6 +47,12 @@ namespace Chameleon.Info
                 fancyDoorRot = Quaternion.Euler(-90f, 0f, 0f),
                 planeOffset = new(-0.00336369989f, -0.0699860007f, -1.02460158f),
                 doorLightColor = DoorLightPalette.WITCHES_BACKGROUND
+            }},
+            { "EmbrionLevel", new(){
+                fancyDoorPos = new(-195.470001f, 6.35699987f, -7.82999992f),
+                fancyDoorRot = Quaternion.Euler(-90f, 0f, 39.517f),
+                planeOffset = new(-0.045f, -1f, -0.05513f),
+                doorLightColor = DoorLightPalette.AMETHYST_BACKGROUND
             }},
             { "RendLevel", new(){
                 fancyDoorPos = new(50.5449982f, -16.8225021f, -152.716583f),

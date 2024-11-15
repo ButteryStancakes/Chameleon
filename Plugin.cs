@@ -10,7 +10,7 @@ namespace Chameleon
     [BepInPlugin(PLUGIN_GUID, PLUGIN_NAME, PLUGIN_VERSION)]
     public class Plugin : BaseUnityPlugin
     {
-        const string PLUGIN_GUID = "butterystancakes.lethalcompany.chameleon", PLUGIN_NAME = "Chameleon", PLUGIN_VERSION = "1.2.1";
+        const string PLUGIN_GUID = "butterystancakes.lethalcompany.chameleon", PLUGIN_NAME = "Chameleon", PLUGIN_VERSION = "1.2.2";
         internal static new ManualLogSource Logger;
 
         void Awake()
@@ -26,6 +26,8 @@ namespace Chameleon
                 SceneOverrides.done = false;
                 SceneOverrides.forceRainy = false;
                 SceneOverrides.forceStormy = false;
+                SceneOverrides.breakerBoxOff = false;
+                SceneOverrides.windowsInManor = false;
             };
 
             Logger.LogInfo($"{PLUGIN_NAME} v{PLUGIN_VERSION} loaded");
@@ -97,6 +99,26 @@ namespace Chameleon
         static void StartOfRoundPostStart()
         {
             SceneOverrides.BuildWeightLists();
+        }
+
+        [HarmonyPatch(typeof(RoundManager), "Update")]
+        [HarmonyPostfix]
+        static void RoundManagerPostUpdate(RoundManager __instance)
+        {
+            if (__instance.powerOffPermanently && !SceneOverrides.breakerBoxOff)
+            {
+                SceneOverrides.breakerBoxOff = true;
+                if (Configuration.powerOffBreakerBox.Value)
+                    SceneOverrides.ShutdownBreakerBox();
+            }
+        }
+
+        [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.TurnOnAllLights))]
+        [HarmonyPostfix]
+        static void RoundManagerPostTurnOnAllLights(RoundManager __instance, bool on)
+        {
+            if (SceneOverrides.windowsInManor)
+                SceneOverrides.ToggleAllWindows(on);
         }
     }
 }

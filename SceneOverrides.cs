@@ -11,10 +11,16 @@ namespace Chameleon
 {
     internal static class SceneOverrides
     {
-        internal static bool done, forceRainy, forceStormy;
+        internal static bool done, forceRainy, forceStormy, breakerBoxOff, windowsInManor;
 
         static GameObject artificeBlizzard;
+
         static Dictionary<string, IntWithRarity[]> mineshaftWeightLists = [];
+
+        static Material breakerLightOff;
+
+        static Material fakeWindowOff, fakeWindowOn;
+        static List<(Renderer room, Light light)> windowTiles = [];
 
         internal static void ExteriorOverrides()
         {
@@ -127,44 +133,56 @@ namespace Chameleon
 
         internal static void InteriorOverrides()
         {
-            VanillaLevelsInfo.predefinedLevels.TryGetValue(StartOfRound.Instance.currentLevel.name, out LevelCosmeticInfo currentLevelCosmeticInfo);
+            string interior = RoundManager.Instance?.dungeonGenerator?.Generator?.DungeonFlow?.name;
 
-            if (RoundManager.Instance?.dungeonGenerator?.Generator?.DungeonFlow == null)
+            if (string.IsNullOrEmpty(interior))
                 return;
 
-            if (RoundManager.Instance.dungeonGenerator.Generator.DungeonFlow.name == "Level2Flow"
+            VanillaLevelsInfo.predefinedLevels.TryGetValue(StartOfRound.Instance.currentLevel.name, out LevelCosmeticInfo currentLevelCosmeticInfo);
+
+            if (breakerLightOff == null || fakeWindowOff == null)
+            {
+                try
+                {
+                    AssetBundle lightMats = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "lightmats"));
+                    breakerLightOff = lightMats.LoadAsset<Material>("LEDLightYellowOff");
+                    fakeWindowOff = lightMats.LoadAsset<Material>("FakeWindowViewOff");
+                    lightMats.Unload(false);
+                }
+                catch
+                {
+                    Plugin.Logger.LogError("Encountered some error loading assets from bundle \"lightmats\". Did you install the plugin correctly?");
+                    return;
+                }
+            }
+
+            if (interior == "Level2Flow"
                 // scarlet devil mansion
-                || RoundManager.Instance.dungeonGenerator.Generator.DungeonFlow.name == "SDMLevel")
+                || interior == "SDMLevel")
             {
                 // set up manor doors
                 if (Configuration.fancyEntranceDoors.Value && currentLevelCosmeticInfo != null)
                     SetUpFancyEntranceDoors(currentLevelCosmeticInfo);
+
+                // set up window tiles
+                if (interior == "Level2Flow" && Configuration.powerOffWindows.Value)
+                    SetUpManorWindows();
             }
             else
             {
                 // color background
                 if (Configuration.doorLightColors.Value)
-                {
-                    SpriteRenderer lightBehindDoor = Object.FindObjectsOfType<SpriteRenderer>().FirstOrDefault(spriteRenderer => spriteRenderer.name == "LightBehindDoor");
-                    if (lightBehindDoor != null)
-                    {
-                        if (StartOfRound.Instance.currentLevel.currentWeather == LevelWeatherType.Eclipsed)
-                            lightBehindDoor.color = DoorLightPalette.ECLIPSE_BACKGROUND;
-                        else if (IsSnowLevel())
-                            lightBehindDoor.color = DoorLightPalette.BLIZZARD_BACKGROUND;
-                        else if (currentLevelCosmeticInfo != null)
-                            lightBehindDoor.color = currentLevelCosmeticInfo.doorLightColor;
-                        else
-                            Plugin.Logger.LogDebug("Could not recolor door light - No information exists for the current level (Are you playing a custom moon?)");
-                    }
-                    else
-                        Plugin.Logger.LogDebug("Could not recolor door light - GameObject \"LightBehindDoor\" was not found (Are you playing a custom interior?)");
-                }
+                    ColorDoorLight(currentLevelCosmeticInfo);
 
                 // mineshaft retextures
-                if (RoundManager.Instance.dungeonGenerator.Generator.DungeonFlow.name == "Level3Flow")
+                if (interior == "Level3Flow")
                 {
-                    if (mineshaftWeightLists.TryGetValue(StartOfRound.Instance.currentLevel.name, out IntWithRarity[] mineshaftWeightList))
+                    if (Configuration.autoAdaptSnow.Value && IsSnowLevel() && (artificeBlizzard != null || !VanillaLevelsInfo.predefinedLevels.ContainsKey(StartOfRound.Instance.currentLevel.name)))
+                    {
+                        RetextureCaverns(CavernType.Ice);
+                        Plugin.Logger.LogDebug("Snow level detected, automatically enabling ice caverns");
+                    }
+                    else if (mineshaftWeightLists.TryGetValue(StartOfRound.Instance.currentLevel.name, out IntWithRarity[] mineshaftWeightList))
                     {
                         // converts the weighted list into an array of integers, then selects an index based on weight
                         int index = RoundManager.Instance.GetRandomWeightedIndex(mineshaftWeightList.Select(x => x.rarity).ToArray(), new System.Random(StartOfRound.Instance.randomMapSeed));
@@ -330,7 +348,7 @@ namespace Chameleon
             }
         }
 
-        internal static bool IsSnowLevel()
+        static bool IsSnowLevel()
         {
             return StartOfRound.Instance.currentLevel.levelIncludesSnowFootprints && (artificeBlizzard == null || artificeBlizzard.activeSelf);
         }
@@ -371,6 +389,121 @@ namespace Chameleon
                 {
                     Plugin.Logger.LogError("Failed to finish assembling weighted lists. If you are encountering this error, it's likely there is a problem with your config - look for warnings further up in your log!");
                 }
+            }
+        }
+
+        static void ColorDoorLight(LevelCosmeticInfo levelCosmeticInfo)
+        {
+            SpriteRenderer lightBehindDoor = Object.FindObjectsOfType<SpriteRenderer>().FirstOrDefault(spriteRenderer => spriteRenderer.name == "LightBehindDoor");
+            if (lightBehindDoor != null)
+            {
+                if (StartOfRound.Instance.currentLevel.currentWeather == LevelWeatherType.Eclipsed)
+                    lightBehindDoor.color = DoorLightPalette.ECLIPSE_BACKGROUND;
+                else if (IsSnowLevel())
+                    lightBehindDoor.color = DoorLightPalette.BLIZZARD_BACKGROUND;
+                else if (levelCosmeticInfo != null)
+                    lightBehindDoor.color = levelCosmeticInfo.doorLightColor;
+                else
+                    Plugin.Logger.LogDebug("Could not recolor door light - No information exists for the current level (Are you playing a custom moon?)");
+            }
+            else
+                Plugin.Logger.LogDebug("Could not recolor door light - GameObject \"LightBehindDoor\" was not found (Are you playing a custom interior?)");
+        }
+
+        internal static void ShutdownBreakerBox()
+        {
+            if (breakerLightOff != null)
+            {
+                BreakerBox breakerBox = Object.FindObjectOfType<BreakerBox>();
+                if (breakerBox != null)
+                {
+                    Transform light = breakerBox.transform.Find("Light");
+                    Renderer rend = light.GetComponent<Renderer>();
+                    if (rend != null)
+                    {
+                        Material[] mats = rend.sharedMaterials;
+                        if (mats.Length != 2)
+                        {
+                            Plugin.Logger.LogWarning("Breaker box materials are different than expected. Is this a custom interior?");
+                            return;
+                        }
+                        mats[1] = breakerLightOff;
+                        rend.sharedMaterials = mats;
+
+                        light.Find("RedLight")?.gameObject?.SetActive(false);
+
+                        if (breakerBox.breakerBoxHum != null)
+                        {
+                            breakerBox.breakerBoxHum.Stop();
+                            breakerBox.breakerBoxHum.mute = true;
+                        }
+                    }
+                    Plugin.Logger.LogDebug("Breaker box light was turned off");
+                }
+            }
+            else
+                Plugin.Logger.LogWarning("Can't disable breaker box light because material is missing. Asset bundle(s) were likely installed incorrectly");
+        }
+
+        static void SetUpManorWindows()
+        {
+            windowTiles.Clear();
+
+            if (fakeWindowOff == null)
+            {
+                Plugin.Logger.LogWarning("Skipping window caching because the asset bundle materials failed to load.");
+                return;
+            }
+
+            GameObject dungeonRoot = GameObject.Find("/Systems/LevelGeneration/LevelGenerationRoot");
+            if (dungeonRoot == null)
+            {
+                Plugin.Logger.LogWarning("Skipping manor search because there was an error finding the dungeon object tree.");
+                return;
+            }
+
+            foreach (Renderer rend in dungeonRoot.GetComponentsInChildren<Renderer>())
+            {
+                if (rend.name == "mesh" && rend.sharedMaterials.Length > 5 && rend.sharedMaterials[5]?.name == "FakeWindowView")
+                {
+                    if (fakeWindowOn == null)
+                    {
+                        fakeWindowOn = rend.sharedMaterials[5];
+                        fakeWindowOff.mainTexture = fakeWindowOn.GetTexture("_EmissiveColorMap");
+                        //fakeWindowOff.mainTextureScale = fakeWindowOn.mainTextureScale;
+                        //fakeWindowOff.mainTextureOffset = fakeWindowOn.mainTextureOffset;
+                    }
+                    Light screenLight = rend.transform.parent.Find("ScreenLight")?.GetComponent<Light>();
+                    if (screenLight != null)
+                    {
+                        windowTiles.Add((rend, screenLight));
+                        Plugin.Logger.LogDebug("Cached window tile instance");
+                    }
+                }
+            }
+
+            if (windowTiles.Count > 0)
+            {
+                windowsInManor = true;
+
+                // in case the level begins with the power off
+                BreakerBox breakerBox = Object.FindObjectOfType<BreakerBox>();
+                if (breakerBox != null && breakerBox.leversSwitchedOff > 0)
+                    ToggleAllWindows(false);
+            }
+        }
+
+        internal static void ToggleAllWindows(bool powered)
+        {
+            if (!windowsInManor || windowTiles.Count < 1 || fakeWindowOn == null || fakeWindowOff == null)
+                return;
+
+            foreach ((Renderer rend, Light light) windowTile in windowTiles)
+            {
+                Material[] mats = windowTile.rend.sharedMaterials;
+                mats[5] = powered ? fakeWindowOn : fakeWindowOff;
+                windowTile.rend.sharedMaterials = mats;
+                windowTile.light.enabled = powered;
             }
         }
     }
