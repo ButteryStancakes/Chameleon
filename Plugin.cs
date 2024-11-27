@@ -14,7 +14,7 @@ namespace Chameleon
     [BepInDependency(GUID_ARTIFICE_BLIZZARD, BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
-        const string PLUGIN_GUID = "butterystancakes.lethalcompany.chameleon", PLUGIN_NAME = "Chameleon", PLUGIN_VERSION = "1.2.3";
+        const string PLUGIN_GUID = "butterystancakes.lethalcompany.chameleon", PLUGIN_NAME = "Chameleon", PLUGIN_VERSION = "1.2.4";
         internal static new ManualLogSource Logger;
 
         const string GUID_ARTIFICE_BLIZZARD = "butterystancakes.lethalcompany.artificeblizzard";
@@ -172,9 +172,9 @@ namespace Chameleon
                 sunlight.enabled = false;
         }
 
-        [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.ResetShip))]
+        [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.EndPlayersFiredSequenceClientRpc))]
         [HarmonyPostfix]
-        static void PostResetShip(StartOfRound __instance)
+        static void PostEndPlayersFiredSequenceClientRpc(StartOfRound __instance)
         {
             if (sunlight != null)
                 sunlight.enabled = true;
