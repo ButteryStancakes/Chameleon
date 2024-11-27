@@ -3,19 +3,32 @@ using BepInEx.Logging;
 using HarmonyLib;
 using UnityEngine.SceneManagement;
 using UnityEngine;
+using System.IO;
+using System.Reflection;
+using System.Linq;
+using BepInEx.Bootstrap;
 
 namespace Chameleon
 {
-
     [BepInPlugin(PLUGIN_GUID, PLUGIN_NAME, PLUGIN_VERSION)]
+    [BepInDependency(GUID_ARTIFICE_BLIZZARD, BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
-        const string PLUGIN_GUID = "butterystancakes.lethalcompany.chameleon", PLUGIN_NAME = "Chameleon", PLUGIN_VERSION = "1.2.2";
+        const string PLUGIN_GUID = "butterystancakes.lethalcompany.chameleon", PLUGIN_NAME = "Chameleon", PLUGIN_VERSION = "1.2.3";
         internal static new ManualLogSource Logger;
+
+        const string GUID_ARTIFICE_BLIZZARD = "butterystancakes.lethalcompany.artificeblizzard";
+        internal static bool INSTALLED_ARTIFICE_BLIZZARD;
 
         void Awake()
         {
             Logger = base.Logger;
+
+            if (Chainloader.PluginInfos.ContainsKey(GUID_ARTIFICE_BLIZZARD))
+            {
+                INSTALLED_ARTIFICE_BLIZZARD = true;
+                Plugin.Logger.LogInfo("CROSS-COMPATIBILITY - Artifice Blizzard detected");
+            }
 
             Configuration.Init(Config);
 
@@ -37,6 +50,10 @@ namespace Chameleon
     [HarmonyPatch]
     class ChameleonPatches
     {
+        static Animator shipAnimator;
+        static Light sunlight;
+        static Texture giantSnowy;
+
         [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.FinishGeneratingNewLevelClientRpc))]
         [HarmonyPostfix]
         static void PostFinishGeneratingNewLevelClientRpc(RoundManager __instance)
@@ -119,6 +136,94 @@ namespace Chameleon
         {
             if (SceneOverrides.windowsInManor)
                 SceneOverrides.ToggleAllWindows(on);
+        }
+
+        [HarmonyPatch(typeof(StartOfRound), "Awake")]
+        [HarmonyPostfix]
+        static void StartOfRoundPostAwake(StartOfRound __instance)
+        {
+            if (Configuration.planetPreview.Value && __instance.outerSpaceSunAnimator != null)
+            {
+                sunlight = __instance.outerSpaceSunAnimator.GetComponent<Light>();
+                if (sunlight != null)
+                {
+                    __instance.outerSpaceSunAnimator.enabled = false;
+                    __instance.outerSpaceSunAnimator.transform.rotation = Quaternion.Euler(10.560008f, 188.704987f, 173.568024f);
+                    sunlight.enabled = true;
+                    shipAnimator = __instance.shipAnimatorObject.GetComponent<Animator>();
+                }
+
+                // artifice is snowy by default
+                if (!Plugin.INSTALLED_ARTIFICE_BLIZZARD)
+                {
+                    GameObject moon2 = __instance.levels.FirstOrDefault(level => level.planetPrefab != null && level.planetPrefab.name.StartsWith("Moon2")).planetPrefab;
+                    SelectableLevel artifice = __instance.levels.FirstOrDefault(level => level.name == "ArtificeLevel");
+                    if (moon2 != null && artifice != null)
+                        artifice.planetPrefab = moon2;
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.LateUpdate))]
+        [HarmonyPostfix]
+        static void StartOfRoundPostLateUpdate(StartOfRound __instance)
+        {
+            if (__instance.firingPlayersCutsceneRunning && sunlight != null && shipAnimator != null && shipAnimator.GetBool("AlarmRinging"))
+                sunlight.enabled = false;
+        }
+
+        [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.ResetShip))]
+        [HarmonyPostfix]
+        static void PostResetShip(StartOfRound __instance)
+        {
+            if (sunlight != null)
+                sunlight.enabled = true;
+        }
+
+        [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.ChangePlanet))]
+        [HarmonyPostfix]
+        static void PostChangePlanet(StartOfRound __instance)
+        {
+            // don't show company in orbit
+            if (sunlight != null && __instance.currentLevel.name == "CompanyBuildingLevel" && __instance.currentPlanetPrefab != null)
+            {
+                foreach (Renderer rend in __instance.currentPlanetPrefab.GetComponentsInChildren<Renderer>())
+                {
+                    rend.enabled = false;
+                    rend.forceRenderingOff = true;
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(ForestGiantAI), nameof(ForestGiantAI.Start))]
+        [HarmonyPostfix]
+        static void ForestGiantAIPostStart(ForestGiantAI __instance)
+        {
+            if (SceneOverrides.IsSnowLevel())
+            {
+                if (giantSnowy == null)
+                {
+                    try
+                    {
+                        AssetBundle enemyBundle = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "enemyskins"));
+                        giantSnowy = enemyBundle.LoadAsset<Texture>("ForestGiantTexWithEyesSnowy");
+                        enemyBundle.Unload(false);
+                    }
+                    catch
+                    {
+                        Plugin.Logger.LogError("Encountered some error loading assets from bundle \"enemyskins\". Did you install the plugin correctly?");
+                        return;
+                    }
+                }
+
+                if (giantSnowy != null)
+                {
+                    foreach (SkinnedMeshRenderer rend in __instance.GetComponentsInChildren<SkinnedMeshRenderer>())
+                        rend.material.mainTexture = giantSnowy;
+
+                    Plugin.Logger.LogDebug("Forest Keeper: Snow \"camouflage\"");
+                }
+            }
         }
     }
 }

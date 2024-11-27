@@ -121,7 +121,9 @@ namespace Chameleon
                         forceStormy = true;
                 }
             }
-            else if (StartOfRound.Instance.currentLevel.name == "MarchLevel")
+            // planetname - for dopadream
+            else if (StartOfRound.Instance.currentLevel.PlanetName == "March"
+                || StartOfRound.Instance.currentLevel.PlanetName == "Mаrch") // DO NOT REMOVE!!! cyrillic а
             {
                 float rainChance = 0.66f;
                 if (StartOfRound.Instance.currentLevel.currentWeather == LevelWeatherType.Foggy)
@@ -340,7 +342,7 @@ namespace Chameleon
 
         internal static void SetupCompatibility()
         {
-            if (StartOfRound.Instance.currentLevel.name == "ArtificeLevel" && Chainloader.PluginInfos.ContainsKey("butterystancakes.lethalcompany.artificeblizzard"))
+            if (StartOfRound.Instance.currentLevel.name == "ArtificeLevel" && Plugin.INSTALLED_ARTIFICE_BLIZZARD)
             {
                 artificeBlizzard = GameObject.Find("/Systems/Audio/BlizzardAmbience");
                 if (artificeBlizzard != null)
@@ -348,7 +350,7 @@ namespace Chameleon
             }
         }
 
-        static bool IsSnowLevel()
+        internal static bool IsSnowLevel()
         {
             return StartOfRound.Instance.currentLevel.levelIncludesSnowFootprints && (artificeBlizzard == null || artificeBlizzard.activeSelf);
         }

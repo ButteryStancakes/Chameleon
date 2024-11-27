@@ -23,7 +23,7 @@ namespace Chameleon
 
         static ConfigFile configFile;
 
-        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows;
+        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, snowyGiants;
         internal static ConfigEntry<GordionStorms> stormyGordion;
 
         internal static List<MoonCavernMapping> mappings = [];
@@ -39,6 +39,12 @@ namespace Chameleon
 
         static void ExteriorConfig()
         {
+            planetPreview = configFile.Bind(
+                "Exterior",
+                "PlanetPreview",
+                true,
+                "The currently orbited planet is visible on the ship's external security camera while in space, as it used to be in v38.\nYou should disable this if you encounter lighting issues on the ship.");
+
             fancyEntranceDoors = configFile.Bind(
                 "Exterior",
                 "FancyEntranceDoors",
@@ -68,6 +74,12 @@ namespace Chameleon
                 "EclipsesBlockMusic",
                 true,
                 "Prevents the morning/afternoon ambience music from playing during Eclipsed weather, which has its own ambient track.");
+
+            snowyGiants = configFile.Bind(
+                "Exterior",
+                "SnowyGiants",
+                true,
+                "When the surface is snowy, Forest Keepers will blend in a little better with the environment.\nIf you are experiencing issues with giants and have other skin mods installed, you should probably disable this setting.");
         }
 
         static void InteriorConfig()
