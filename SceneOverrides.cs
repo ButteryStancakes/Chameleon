@@ -121,9 +121,9 @@ namespace Chameleon
                         forceStormy = true;
                 }
             }
-            // planetname - for dopadream
-            else if (StartOfRound.Instance.currentLevel.PlanetName == "March"
-                || StartOfRound.Instance.currentLevel.PlanetName == "Mаrch") // DO NOT REMOVE!!! cyrillic а
+            // check for current level name instead of planet name, this works for some reason?
+            else if (StartOfRound.Instance.currentLevel.name == "MarchLevel"
+                || StartOfRound.Instance.currentLevel.name == "ReMarchLevel") 
             {
                 float rainChance = 0.66f;
                 if (StartOfRound.Instance.currentLevel.currentWeather == LevelWeatherType.Foggy)
