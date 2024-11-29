@@ -7,6 +7,7 @@ using System.IO;
 using System.Reflection;
 using System.Linq;
 using BepInEx.Bootstrap;
+using DunGen;
 
 namespace Chameleon
 {
@@ -16,7 +17,6 @@ namespace Chameleon
     {
         const string PLUGIN_GUID = "butterystancakes.lethalcompany.chameleon", PLUGIN_NAME = "Chameleon", PLUGIN_VERSION = "1.2.4";
         internal static new ManualLogSource Logger;
-
         const string GUID_ARTIFICE_BLIZZARD = "butterystancakes.lethalcompany.artificeblizzard";
         internal static bool INSTALLED_ARTIFICE_BLIZZARD;
 
@@ -84,6 +84,16 @@ namespace Chameleon
                 stormPos.y = Mathf.Max(stormPos.y, -24f);
                 stormy.transform.position = stormPos;
                 stormy.SetActive(true);
+            }
+        }
+
+        [HarmonyPatch(typeof(DungeonUtil), nameof(DungeonUtil.AddAndSetupDoorComponent))]
+        [HarmonyPostfix]
+        static void RoundManagerPostSetupDoor(Dungeon dungeon, GameObject doorPrefab, Doorway doorway)
+        {
+            if (Configuration.fixedSteelDoors.Value)
+            {
+                SceneOverrides.SetUpFixedSteelDoors(dungeon, doorPrefab, doorway);
             }
         }
 

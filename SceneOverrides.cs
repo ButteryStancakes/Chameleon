@@ -20,6 +20,9 @@ namespace Chameleon
         static Material breakerLightOff;
 
         static Material fakeWindowOff, fakeWindowOn;
+
+        static Material glass;
+
         static List<(Renderer room, Light light)> windowTiles = [];
 
         internal static void ExteriorOverrides()
@@ -206,6 +209,69 @@ namespace Chameleon
                     }
                     else
                         Plugin.Logger.LogDebug("No custom cave weights were defined for the current moon. Falling back to vanilla caverns");
+                }
+            }
+        }
+
+        public static void SetUpFixedSteelDoors(Dungeon dungeon, GameObject doorPrefab, Doorway doorway)
+        {
+            try
+            {
+                AssetBundle doorGlass = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "doorglass"));
+                glass = doorGlass.LoadAsset<Material>("DoorGlass");
+                doorGlass.Unload(false);
+            }
+            catch
+            {
+                Plugin.Logger.LogError("Encountered some error loading assets from bundle \"doorglass\". Did you install the plugin correctly?");
+                return;
+            }
+
+            string interior = dungeon.name;
+
+            if (interior != "Level2Flow")
+            {
+                if (!doorPrefab.name.StartsWith("SteelDoorMapSpawn"))
+                {
+                    return;
+                }
+
+                SpawnSyncedObject spawner = doorPrefab.GetComponent<SpawnSyncedObject>();
+                foreach (Transform steeldoor_child in spawner.spawnPrefab.transform)
+                {
+                    if (!steeldoor_child.name.StartsWith("SteelDoor"))
+                    {
+                        continue;
+                    }
+
+                    foreach (Transform doormesh_child in steeldoor_child.transform)
+                    {
+                        if (!doormesh_child.name.StartsWith("DoorMesh"))
+                        {
+                            continue;
+                        }
+
+                    }
+
+                    Renderer[] componentsInChildren = (steeldoor_child).GetComponentsInChildren<Renderer>();
+
+                    foreach (Renderer val in componentsInChildren)
+                    {
+                        Material[] materials = val.GetSharedMaterialArray();
+                        for (int i = 0; i < materials.Length; i++)
+                        {
+                            Material mat = materials[i];
+                            if (!mat.name.StartsWith("HelmetGlass 1"))
+                            {
+                                continue;
+                            }
+
+                            mat = Plugin.Instantiate(glass);        
+
+                            materials[i] = mat;
+                        }
+                        val.materials = materials;
+                    }
                 }
             }
         }
