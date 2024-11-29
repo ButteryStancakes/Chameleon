@@ -161,21 +161,6 @@ namespace Chameleon
                 }
             }
 
-            if (glass == null)
-            {
-                try
-                {
-                    AssetBundle doorGlass = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "doorglass"));
-                    glass = doorGlass.LoadAsset<Material>("DoorGlass");
-                    doorGlass.Unload(false);
-                }
-                catch
-                {
-                    Plugin.Logger.LogError("Encountered some error loading assets from bundle \"doorglass\". Did you install the plugin correctly?");
-                    return;
-                }
-            }
-
 
             if (interior == "Level2Flow"
                 // scarlet devil mansion
@@ -229,8 +214,23 @@ namespace Chameleon
             }
         }
 
-        public static void SetUpFixedSteelDoors(Dungeon dungeon, GameObject doorPrefab, Doorway doorway)
+        public static void SetUpFixedSteelDoors(Dungeon dungeon, GameObject doorPrefab)
         {
+
+            if (glass == null)
+            {
+                try
+                {
+                    AssetBundle doorGlass = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "doorglass"));
+                    glass = doorGlass.LoadAsset<Material>("DoorGlass");
+                    doorGlass.Unload(false);
+                }
+                catch
+                {
+                    Plugin.Logger.LogError("Encountered some error loading assets from bundle \"doorglass\". Did you install the plugin correctly?");
+                    return;
+                }
+            }
 
             string interior = dungeon.name;
 

@@ -93,7 +93,7 @@ namespace Chameleon
         {
             if (Configuration.fixedSteelDoors.Value)
             {
-                SceneOverrides.SetUpFixedSteelDoors(dungeon, doorPrefab, doorway);
+                SceneOverrides.SetUpFixedSteelDoors(dungeon, doorPrefab);
             }
         }
 
