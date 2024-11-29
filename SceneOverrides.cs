@@ -161,6 +161,22 @@ namespace Chameleon
                 }
             }
 
+            if (glass == null)
+            {
+                try
+                {
+                    AssetBundle doorGlass = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "doorglass"));
+                    glass = doorGlass.LoadAsset<Material>("DoorGlass");
+                    doorGlass.Unload(false);
+                }
+                catch
+                {
+                    Plugin.Logger.LogError("Encountered some error loading assets from bundle \"doorglass\". Did you install the plugin correctly?");
+                    return;
+                }
+            }
+
+
             if (interior == "Level2Flow"
                 // scarlet devil mansion
                 || interior == "SDMLevel")
@@ -215,26 +231,16 @@ namespace Chameleon
 
         public static void SetUpFixedSteelDoors(Dungeon dungeon, GameObject doorPrefab, Doorway doorway)
         {
-            try
-            {
-                AssetBundle doorGlass = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "doorglass"));
-                glass = doorGlass.LoadAsset<Material>("DoorGlass");
-                doorGlass.Unload(false);
-            }
-            catch
-            {
-                Plugin.Logger.LogError("Encountered some error loading assets from bundle \"doorglass\". Did you install the plugin correctly?");
-                return;
-            }
 
             string interior = dungeon.name;
 
-            if (interior != "Level2Flow")
+            if (interior != "Level2Flow" && interior != "Level3Flow")
             {
                 if (!doorPrefab.name.StartsWith("SteelDoorMapSpawn"))
                 {
                     return;
                 }
+
 
                 SpawnSyncedObject spawner = doorPrefab.GetComponent<SpawnSyncedObject>();
                 foreach (Transform steeldoor_child in spawner.spawnPrefab.transform)
@@ -266,7 +272,7 @@ namespace Chameleon
                                 continue;
                             }
 
-                            mat = Plugin.Instantiate(glass);        
+                            mat = glass;        
 
                             materials[i] = mat;
                         }
