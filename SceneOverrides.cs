@@ -161,7 +161,6 @@ namespace Chameleon
                 }
             }
 
-
             if (interior == "Level2Flow"
                 // scarlet devil mansion
                 || interior == "SDMLevel")
