@@ -23,7 +23,7 @@ namespace Chameleon
 
         static ConfigFile configFile;
 
-        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, snowyGiants;
+        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, snowyGiants, fixedSteelDoors;
         internal static ConfigEntry<GordionStorms> stormyGordion;
 
         internal static List<MoonCavernMapping> mappings = [];
@@ -95,6 +95,12 @@ namespace Chameleon
                 "PowerOffBreakerBox",
                 true,
                 "When the apparatus is unplugged, the light on the breaker box will turn off to indicate it is inactive.");
+
+            fixedSteelDoors = configFile.Bind(
+                "Interior",
+                "FixedSteelDoors",
+                true,
+                "Fixes the glass on the steel doors in facilities to show on both sides.");
 
             InteriorManorConfig();
             InteriorMineshaftConfig();
