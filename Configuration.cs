@@ -23,7 +23,7 @@ namespace Chameleon
 
         static ConfigFile configFile;
 
-        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, snowyGiants, fixedSteelDoors;
+        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, snowyGiants, fixedSteelDoors, foliageDiffusion;
         internal static ConfigEntry<GordionStorms> stormyGordion;
 
         internal static List<MoonCavernMapping> mappings = [];
@@ -80,6 +80,13 @@ namespace Chameleon
                 "SnowyGiants",
                 true,
                 "When the surface is snowy, Forest Keepers will blend in a little better with the environment.\nIf you are experiencing issues with giants and have other skin mods installed, you should probably disable this setting.");
+
+            foliageDiffusion = configFile.Bind(
+                "Exterior",
+                "FancyFoliage",
+                true,
+                "Light passes and spreads through the foliage for a nicer effect. Performance impact is negligible.");
+
         }
 
         static void InteriorConfig()

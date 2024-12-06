@@ -6,6 +6,7 @@ using UnityEngine;
 using Chameleon.Info;
 using BepInEx.Bootstrap;
 using System.Collections.Generic;
+using UnityEngine.Rendering.HighDefinition;
 
 namespace Chameleon
 {
@@ -21,9 +22,12 @@ namespace Chameleon
 
         static Material fakeWindowOff, fakeWindowOn;
 
+        static Material diffuseLeaves, diffuseLeavesSnowy;
+
         static Material glass;
 
         static List<(Renderer room, Light light)> windowTiles = [];
+
 
         internal static void ExteriorOverrides()
         {
@@ -126,7 +130,7 @@ namespace Chameleon
             }
             // check for current level name instead of planet name, this works for some reason?
             else if (StartOfRound.Instance.currentLevel.name == "MarchLevel"
-                || StartOfRound.Instance.currentLevel.name == "ReMarchLevel") 
+                || StartOfRound.Instance.currentLevel.name == "ReMarchLevel")
             {
                 float rainChance = 0.66f;
                 if (StartOfRound.Instance.currentLevel.currentWeather == LevelWeatherType.Foggy)
@@ -134,6 +138,69 @@ namespace Chameleon
                 if (Configuration.rainyMarch.Value && StartOfRound.Instance.currentLevel.currentWeather != LevelWeatherType.Stormy && StartOfRound.Instance.currentLevel.currentWeather != LevelWeatherType.Flooded && new System.Random(StartOfRound.Instance.randomMapSeed).NextDouble() <= rainChance)
                     forceRainy = true;
             }
+
+            if (Configuration.foliageDiffusion.Value)
+            {
+
+                Transform localMap = GameObject.Find("/Environment/Map")?.transform;
+
+                if (localMap != null)
+                {
+                    var diffusionProfileList = HDRenderPipelineGlobalSettings.instance.GetOrCreateDiffusionProfileList();
+
+                    try
+                    {
+                        AssetBundle fancyFoliage = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "fancyfoliage"));
+                        diffuseLeaves = fancyFoliage.LoadAsset<Material>("ForestTextureClone");
+                        fancyFoliage.Unload(false);
+                    }
+                    catch
+                    {
+                        Plugin.Logger.LogError("Encountered some error loading assets from bundle \"fancyfoliage\". Did you install the plugin correctly?");
+                        return;
+                    }
+
+                    foreach (Transform t in localMap)
+                    {
+                        if (t.TryGetComponentInChildren<Renderer>(out Renderer renderer))
+                        {
+                            Material sharedMaterial = renderer.sharedMaterial;
+                            if (sharedMaterial != null && (sharedMaterial.name.StartsWith("ForestTexture") || sharedMaterial.name.StartsWith("Leaves")))
+                            {
+                                int savedQueue = sharedMaterial.renderQueue;
+                                sharedMaterial.shader = diffuseLeaves.shader;
+                                sharedMaterial.renderQueue = savedQueue;
+                                sharedMaterial.shaderKeywords = diffuseLeaves.shaderKeywords;
+
+                                foreach (var diffusionProfileSettings in diffusionProfileList.diffusionProfiles.value)
+                                {
+                                    if (diffusionProfileSettings.name == "Foliage Diffusion Profile")
+                                    {
+                                        var hashAsFloat = System.BitConverter.Int32BitsToSingle((int)diffusionProfileSettings.profile.hash);
+                                        sharedMaterial.SetFloat("_DiffusionProfileHash", hashAsFloat);
+                                        if (sharedMaterial.HasProperty("_TransmissionMaskMap"))
+                                        {
+                                            sharedMaterial.SetTexture("_TransmissionMaskMap", diffuseLeaves.GetTexture("_TransmissionMaskMap"));
+                                        }
+                                        break;
+                                    }
+                                }
+                                break;
+                            }
+                            else
+                            {
+                                continue;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public static bool TryGetComponentInChildren<T>(this Transform gameObject, out T component) where T : Component
+        {
+            component = gameObject.GetComponentInChildren<T>();
+            return component != null;
         }
 
         internal static void InteriorOverrides()
@@ -271,7 +338,7 @@ namespace Chameleon
                                 continue;
                             }
 
-                            mat = glass;        
+                            mat = glass;
 
                             materials[i] = mat;
                         }
