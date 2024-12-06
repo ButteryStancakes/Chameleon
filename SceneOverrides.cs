@@ -22,7 +22,7 @@ namespace Chameleon
 
         static Material fakeWindowOff, fakeWindowOn;
 
-        static Material diffuseLeaves, diffuseLeavesSnowy;
+        static Material diffuseLeaves;
 
         static Material glass;
 
