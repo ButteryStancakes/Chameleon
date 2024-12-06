@@ -7,6 +7,7 @@ using System.IO;
 using System.Reflection;
 using System.Linq;
 using BepInEx.Bootstrap;
+using DunGen;
 
 namespace Chameleon
 {
@@ -84,6 +85,16 @@ namespace Chameleon
                 stormPos.y = Mathf.Max(stormPos.y, -24f);
                 stormy.transform.position = stormPos;
                 stormy.SetActive(true);
+            }
+        }
+
+        [HarmonyPatch(typeof(DungeonUtil), nameof(DungeonUtil.AddAndSetupDoorComponent))]
+        [HarmonyPostfix]
+        static void RoundManagerPostSetupDoor(Dungeon dungeon, GameObject doorPrefab, Doorway doorway)
+        {
+            if (Configuration.fixedSteelDoors.Value)
+            {
+                SceneOverrides.SetUpFixedSteelDoors(dungeon, doorPrefab);
             }
         }
 
