@@ -165,7 +165,7 @@ namespace Chameleon
                         if (t.TryGetComponentInChildren<Renderer>(out Renderer renderer))
                         {
                             Material sharedMaterial = renderer.sharedMaterial;
-                            if (sharedMaterial != null && (sharedMaterial.name.StartsWith("ForestTexture") || sharedMaterial.name.StartsWith("Leaves")))
+                            if (sharedMaterial != null && (sharedMaterial.name.StartsWith("ForestTexture") || sharedMaterial.name.StartsWith("Leaves") || sharedMaterial.name.StartsWith("TreeFlat")))
                             {
                                 int savedQueue = sharedMaterial.renderQueue;
                                 sharedMaterial.shader = diffuseLeaves.shader;
