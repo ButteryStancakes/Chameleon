@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Linq;
 using UnityEngine;
 using Chameleon.Info;
-using BepInEx.Bootstrap;
 using System.Collections.Generic;
 using UnityEngine.Rendering.HighDefinition;
 
@@ -18,16 +17,14 @@ namespace Chameleon
 
         static Dictionary<string, IntWithRarity[]> mineshaftWeightLists = [];
 
-        static Material breakerLightOff;
-
-        static Material fakeWindowOff, fakeWindowOn;
-
-        static Material diffuseLeaves;
-
-        static Material glass;
-
+        static Material breakerLightOff, fakeWindowOff, fakeWindowOn;
         static List<(Renderer room, Light light)> windowTiles = [];
 
+        static Material diffuseLeaves;
+        static DiffusionProfile foliageDiffusionProfile;
+        static float foliageDiffusionProfileHash;
+
+        static Material material001, helmetGlass;
 
         internal static void ExteriorOverrides()
         {
@@ -128,83 +125,27 @@ namespace Chameleon
                         forceStormy = true;
                 }
             }
-            // check for current level name instead of planet name, this works for some reason?
-            else if (StartOfRound.Instance.currentLevel.name == "MarchLevel"
-                || StartOfRound.Instance.currentLevel.name == "ReMarchLevel")
+            else if ((StartOfRound.Instance.currentLevel.name == "MarchLevel"
+                   || StartOfRound.Instance.currentLevel.name == "ReMarchLevel") // Rebalanced Moons - dopadream
+                   && Configuration.rainyMarch.Value && StartOfRound.Instance.currentLevel.currentWeather != LevelWeatherType.Stormy && StartOfRound.Instance.currentLevel.currentWeather != LevelWeatherType.Flooded)
             {
-                float rainChance = 0.66f;
+                float rainChance = 0.76f;
                 if (StartOfRound.Instance.currentLevel.currentWeather == LevelWeatherType.Foggy)
-                    rainChance *= 0.5f;
-                if (Configuration.rainyMarch.Value && StartOfRound.Instance.currentLevel.currentWeather != LevelWeatherType.Stormy && StartOfRound.Instance.currentLevel.currentWeather != LevelWeatherType.Flooded && new System.Random(StartOfRound.Instance.randomMapSeed).NextDouble() <= rainChance)
+                    rainChance *= 0.45f;
+
+                if (new System.Random(StartOfRound.Instance.randomMapSeed).NextDouble() <= rainChance)
                     forceRainy = true;
             }
 
-            if (Configuration.foliageDiffusion.Value)
-            {
-
-                Transform localMap = GameObject.Find("/Environment/Map")?.transform;
-
-                if (localMap != null)
-                {
-                    var diffusionProfileList = HDRenderPipelineGlobalSettings.instance.GetOrCreateDiffusionProfileList();
-
-                    try
-                    {
-                        AssetBundle fancyFoliage = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "fancyfoliage"));
-                        diffuseLeaves = fancyFoliage.LoadAsset<Material>("ForestTextureClone");
-                        fancyFoliage.Unload(false);
-                    }
-                    catch
-                    {
-                        Plugin.Logger.LogError("Encountered some error loading assets from bundle \"fancyfoliage\". Did you install the plugin correctly?");
-                        return;
-                    }
-
-                    foreach (Transform t in localMap)
-                    {
-                        if (t.TryGetComponentInChildren<Renderer>(out Renderer renderer))
-                        {
-                            Material sharedMaterial = renderer.sharedMaterial;
-                            if (sharedMaterial != null && (sharedMaterial.name.StartsWith("ForestTexture") || sharedMaterial.name.StartsWith("Leaves") || sharedMaterial.name.StartsWith("TreeFlat")))
-                            {
-                                int savedQueue = sharedMaterial.renderQueue;
-                                sharedMaterial.shader = diffuseLeaves.shader;
-                                sharedMaterial.renderQueue = savedQueue;
-                                sharedMaterial.shaderKeywords = diffuseLeaves.shaderKeywords;
-
-                                foreach (var diffusionProfileSettings in diffusionProfileList.diffusionProfiles.value)
-                                {
-                                    if (diffusionProfileSettings.name == "Foliage Diffusion Profile")
-                                    {
-                                        var hashAsFloat = System.BitConverter.Int32BitsToSingle((int)diffusionProfileSettings.profile.hash);
-                                        sharedMaterial.SetFloat("_DiffusionProfileHash", hashAsFloat);
-                                        if (sharedMaterial.HasProperty("_TransmissionMaskMap"))
-                                        {
-                                            sharedMaterial.SetTexture("_TransmissionMaskMap", diffuseLeaves.GetTexture("_TransmissionMaskMap"));
-                                        }
-                                        break;
-                                    }
-                                }
-                                break;
-                            }
-                            else
-                            {
-                                continue;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        public static bool TryGetComponentInChildren<T>(this Transform gameObject, out T component) where T : Component
-        {
-            component = gameObject.GetComponentInChildren<T>();
-            return component != null;
+            if (Configuration.fancyFoliage.Value)
+                SetUpFoliageDiffusion();
         }
 
         internal static void InteriorOverrides()
         {
+            if (Configuration.fixDoors.Value)
+                FixDoorMaterials();
+
             string interior = RoundManager.Instance?.dungeonGenerator?.Generator?.DungeonFlow?.name;
 
             if (string.IsNullOrEmpty(interior))
@@ -276,74 +217,6 @@ namespace Chameleon
                     }
                     else
                         Plugin.Logger.LogDebug("No custom cave weights were defined for the current moon. Falling back to vanilla caverns");
-                }
-            }
-        }
-
-        public static void SetUpFixedSteelDoors(Dungeon dungeon, GameObject doorPrefab)
-        {
-
-            if (glass == null)
-            {
-                try
-                {
-                    AssetBundle doorGlass = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "doorglass"));
-                    glass = doorGlass.LoadAsset<Material>("DoorGlass");
-                    doorGlass.Unload(false);
-                }
-                catch
-                {
-                    Plugin.Logger.LogError("Encountered some error loading assets from bundle \"doorglass\". Did you install the plugin correctly?");
-                    return;
-                }
-            }
-
-            string interior = dungeon.name;
-
-            if (interior != "Level2Flow" && interior != "Level3Flow")
-            {
-                if (!doorPrefab.name.StartsWith("SteelDoorMapSpawn"))
-                {
-                    return;
-                }
-
-
-                SpawnSyncedObject spawner = doorPrefab.GetComponent<SpawnSyncedObject>();
-                foreach (Transform steeldoor_child in spawner.spawnPrefab.transform)
-                {
-                    if (!steeldoor_child.name.StartsWith("SteelDoor"))
-                    {
-                        continue;
-                    }
-
-                    foreach (Transform doormesh_child in steeldoor_child.transform)
-                    {
-                        if (!doormesh_child.name.StartsWith("DoorMesh"))
-                        {
-                            continue;
-                        }
-
-                    }
-
-                    Renderer[] componentsInChildren = (steeldoor_child).GetComponentsInChildren<Renderer>();
-
-                    foreach (Renderer val in componentsInChildren)
-                    {
-                        Material[] materials = val.GetSharedMaterialArray();
-                        for (int i = 0; i < materials.Length; i++)
-                        {
-                            Material mat = materials[i];
-                            if (!mat.name.StartsWith("HelmetGlass 1"))
-                            {
-                                continue;
-                            }
-
-                            mat = glass;
-
-                            materials[i] = mat;
-                        }
-                        val.materials = materials;
-                    }
                 }
             }
         }
@@ -638,13 +511,119 @@ namespace Chameleon
             if (!windowsInManor || windowTiles.Count < 1 || fakeWindowOn == null || fakeWindowOff == null)
                 return;
 
-            foreach ((Renderer rend, Light light) windowTile in windowTiles)
+            foreach ((Renderer rend, Light light) in windowTiles)
             {
-                Material[] mats = windowTile.rend.sharedMaterials;
+                Material[] mats = rend.sharedMaterials;
                 mats[5] = powered ? fakeWindowOn : fakeWindowOff;
-                windowTile.rend.sharedMaterials = mats;
-                windowTile.light.enabled = powered;
+                rend.sharedMaterials = mats;
+                light.enabled = powered;
             }
+        }
+
+        static void FixDoorMaterials()
+        {
+            if (helmetGlass == null || material001 == null)
+            {
+                try
+                {
+                    AssetBundle doubleSides = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "doublesides"));
+                    helmetGlass = doubleSides.LoadAsset<Material>("HelmetGlass 1");
+                    material001 = doubleSides.LoadAsset<Material>("Material.001");
+                    doubleSides.Unload(false);
+                }
+                catch
+                {
+                    Plugin.Logger.LogError("Encountered some error loading assets from bundle \"doublesides\". Did you install the plugin correctly?");
+                    return;
+                }
+            }
+
+            foreach (Renderer doorMesh in Object.FindObjectsOfType<Renderer>().Where(rend => rend.name == "DoorMesh"))
+            {
+                if (doorMesh.sharedMaterials.Length == 7 && (doorMesh.sharedMaterials[2]?.name).StartsWith("Material.001") && (doorMesh.sharedMaterials[5]?.name).StartsWith("HelmetGlass"))
+                {
+                    Material[] doorMats = doorMesh.sharedMaterials;
+                    doorMats[2] = material001;
+                    if (doorMesh.GetComponentInChildren<InteractTrigger>() != null)
+                        doorMats[5] = helmetGlass;
+                    doorMesh.sharedMaterials = doorMats;
+                }
+                else if ((doorMesh.sharedMaterial.name.StartsWith("FancyManorTex") && doorMesh.GetComponentInChildren<InteractTrigger>() != null) || doorMesh.sharedMaterial.name.StartsWith("DoorWood"))
+                {
+                    doorMesh.sharedMaterial.shader = material001.shader;
+                    doorMesh.sharedMaterial.doubleSidedGI = true;
+                    doorMesh.sharedMaterial.EnableKeyword("_DOUBLESIDED_ON");
+                    doorMesh.sharedMaterial.SetFloat("_CullMode", 0f);
+                    doorMesh.sharedMaterial.SetFloat("_CullModeForward", 0f);
+                    doorMesh.sharedMaterial.SetFloat("_DoubleSidedEnable", 1f);
+                }
+            }
+        }
+
+        internal static bool GetFoliageDiffusionReferences()
+        {
+            if (diffuseLeaves == null)
+            {
+                try
+                {
+                    AssetBundle fancyFoliage = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "fancyfoliage"));
+                    diffuseLeaves = fancyFoliage.LoadAsset<Material>("DiffuseLeaves");
+                    fancyFoliage.Unload(false);
+                }
+                catch
+                {
+                    Plugin.Logger.LogError("Encountered some error loading assets from bundle \"fancyfoliage\". Did you install the plugin correctly?");
+                    return false;
+                }
+            }
+
+            if (foliageDiffusionProfile == null)
+            {
+                foliageDiffusionProfile = HDRenderPipelineGlobalSettings.instance.GetOrCreateDiffusionProfileList()?.diffusionProfiles.value.FirstOrDefault(profile => profile?.name == "Foliage Diffusion Profile")?.profile;
+                if (foliageDiffusionProfile != null)
+                    foliageDiffusionProfileHash = System.BitConverter.Int32BitsToSingle((int)foliageDiffusionProfile.hash);
+            }
+
+            return (diffuseLeaves != null && foliageDiffusionProfile != null);
+        }
+
+        internal static void ApplyFoliageDiffusion(IEnumerable<Renderer> renderers)
+        {
+            if (!GetFoliageDiffusionReferences())
+                return;
+
+            foreach (Renderer rend in renderers)
+            {
+                Material foliageMat = rend.sharedMaterial;
+                int savedQueue = foliageMat.renderQueue;
+                foliageMat.shader = diffuseLeaves.shader;
+                foliageMat.renderQueue = savedQueue;
+                //foliageMat.SetFloat("_MaterialID", 5);
+                foliageMat.SetFloat("_DiffusionProfileHash", foliageDiffusionProfileHash);
+                //foliageMat.EnableKeyword("_MATERIAL_FEATURE_TRANSMISSION");
+                //foliageMat.EnableKeyword("_TRANSMISSION_MASK_MAP");
+                foliageMat.shaderKeywords = foliageMat.shaderKeywords.Union(diffuseLeaves.shaderKeywords).ToArray();
+                if (foliageMat.name.StartsWith("ForestTexture"))
+                    foliageMat.SetTexture("_TransmissionMaskMap", diffuseLeaves.GetTexture("_TransmissionMaskMap"));
+                Plugin.Logger.LogDebug($"Applied foliage diffusion to \"{rend.name}\"");
+            }
+        }
+
+        static void SetUpFoliageDiffusion()
+        {
+            Transform map = GameObject.Find("/Environment/Map")?.transform;
+            if (map != null)
+                ApplyFoliageDiffusion(map.GetComponentsInChildren<Renderer>().Where(FilterFoliageObjects));
+
+            if (RoundManager.Instance.mapPropsContainer == null)
+                RoundManager.Instance.mapPropsContainer = GameObject.FindGameObjectWithTag("MapPropsContainer");
+            if (RoundManager.Instance.mapPropsContainer != null)
+                ApplyFoliageDiffusion(RoundManager.Instance.mapPropsContainer.GetComponentsInChildren<Renderer>().Where(FilterFoliageObjects));
+        }
+
+        static bool FilterFoliageObjects(Renderer rend)
+        {
+            return rend.sharedMaterial != null && (rend.sharedMaterial.name.StartsWith("ForestTexture") || rend.sharedMaterial.name.StartsWith("TreeFlat") || rend.sharedMaterial.name.StartsWith("Leaves"));
         }
     }
 }

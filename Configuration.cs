@@ -23,7 +23,7 @@ namespace Chameleon
 
         static ConfigFile configFile;
 
-        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, snowyGiants, fixedSteelDoors, foliageDiffusion;
+        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, snowyGiants, fixDoors, fancyFoliage, fancyShrouds;
         internal static ConfigEntry<GordionStorms> stormyGordion;
 
         internal static List<MoonCavernMapping> mappings = [];
@@ -50,6 +50,18 @@ namespace Chameleon
                 "FancyEntranceDoors",
                 true,
                 "Changes the front doors to match how they look on the inside when a manor interior generates. (Works for ONLY vanilla levels!)");
+
+            fancyFoliage = configFile.Bind(
+                "Exterior",
+                "FancyFoliage",
+                true,
+                "Light passes and spreads through the foliage for nicer visuals. Performance impact is negligible.");
+
+            fancyShrouds = configFile.Bind(
+                "Exterior",
+                "FancyShrouds",
+                true,
+                "Applies FancyFoliage's changes to Vain Shrouds as well. (Really puts the \"vain\" in Vain Shrouds.)");
 
             recolorRandomRocks = configFile.Bind(
                 "Exterior",
@@ -81,12 +93,6 @@ namespace Chameleon
                 true,
                 "When the surface is snowy, Forest Keepers will blend in a little better with the environment.\nIf you are experiencing issues with giants and have other skin mods installed, you should probably disable this setting.");
 
-            foliageDiffusion = configFile.Bind(
-                "Exterior",
-                "FancyFoliage",
-                true,
-                "Light passes and spreads through the foliage for a nicer effect. Performance impact is negligible.");
-
         }
 
         static void InteriorConfig()
@@ -103,11 +109,11 @@ namespace Chameleon
                 true,
                 "When the apparatus is unplugged, the light on the breaker box will turn off to indicate it is inactive.");
 
-            fixedSteelDoors = configFile.Bind(
+            fixDoors = configFile.Bind(
                 "Interior",
-                "FixedSteelDoors",
+                "FixDoors",
                 true,
-                "Fixes the glass on the steel doors in facilities to show on both sides.");
+                "Fixes the glass on the steel doors in factories (and some custom interiors) to show on both sides. Also fixes doorknobs looking incorrect on one side.");
 
             InteriorManorConfig();
             InteriorMineshaftConfig();

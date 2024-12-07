@@ -7,7 +7,6 @@ using System.IO;
 using System.Reflection;
 using System.Linq;
 using BepInEx.Bootstrap;
-using DunGen;
 
 namespace Chameleon
 {
@@ -15,7 +14,7 @@ namespace Chameleon
     [BepInDependency(GUID_ARTIFICE_BLIZZARD, BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
-        const string PLUGIN_GUID = "butterystancakes.lethalcompany.chameleon", PLUGIN_NAME = "Chameleon", PLUGIN_VERSION = "1.2.4";
+        const string PLUGIN_GUID = "butterystancakes.lethalcompany.chameleon", PLUGIN_NAME = "Chameleon", PLUGIN_VERSION = "1.3.0";
         internal static new ManualLogSource Logger;
 
         const string GUID_ARTIFICE_BLIZZARD = "butterystancakes.lethalcompany.artificeblizzard";
@@ -28,7 +27,7 @@ namespace Chameleon
             if (Chainloader.PluginInfos.ContainsKey(GUID_ARTIFICE_BLIZZARD))
             {
                 INSTALLED_ARTIFICE_BLIZZARD = true;
-                Plugin.Logger.LogInfo("CROSS-COMPATIBILITY - Artifice Blizzard detected");
+                Logger.LogInfo("CROSS-COMPATIBILITY - Artifice Blizzard detected");
             }
 
             Configuration.Init(Config);
@@ -85,16 +84,6 @@ namespace Chameleon
                 stormPos.y = Mathf.Max(stormPos.y, -24f);
                 stormy.transform.position = stormPos;
                 stormy.SetActive(true);
-            }
-        }
-
-        [HarmonyPatch(typeof(DungeonUtil), nameof(DungeonUtil.AddAndSetupDoorComponent))]
-        [HarmonyPostfix]
-        static void RoundManagerPostSetupDoor(Dungeon dungeon, GameObject doorPrefab, Doorway doorway)
-        {
-            if (Configuration.fixedSteelDoors.Value)
-            {
-                SceneOverrides.SetUpFixedSteelDoors(dungeon, doorPrefab);
             }
         }
 
@@ -235,6 +224,26 @@ namespace Chameleon
                     Plugin.Logger.LogDebug("Forest Keeper: Snow \"camouflage\"");
                 }
             }
+        }
+
+        [HarmonyPatch(typeof(FoliageDetailDistance), "Start")]
+        [HarmonyPostfix]
+        static void FoliageDetailDistancePostStart(FoliageDetailDistance __instance)
+        {
+            if (Configuration.fancyFoliage.Value && __instance.allBushRenderers.Count > 0)
+            {
+                __instance.allBushRenderers[0].sharedMaterial = __instance.highDetailMaterial;
+                SceneOverrides.ApplyFoliageDiffusion([__instance.allBushRenderers[0]]);
+                __instance.highDetailMaterial = __instance.allBushRenderers[0].sharedMaterial;
+            }
+        }
+
+        [HarmonyPatch(typeof(MoldSpreadManager), "Start")]
+        [HarmonyPostfix]
+        static void MoldSpreadManagerPostStart(MoldSpreadManager __instance)
+        {
+            if (Configuration.fancyShrouds.Value)
+                SceneOverrides.ApplyFoliageDiffusion(__instance.moldPrefab.GetComponentsInChildren<Renderer>().Where(rend => rend.gameObject.layer != 22));
         }
     }
 }
