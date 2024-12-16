@@ -540,7 +540,7 @@ namespace Chameleon
 
             foreach (Renderer doorMesh in Object.FindObjectsOfType<Renderer>().Where(rend => rend.name == "DoorMesh"))
             {
-                if (doorMesh.sharedMaterials.Length == 7 && (doorMesh.sharedMaterials[2]?.name).StartsWith("Material.001") && (doorMesh.sharedMaterials[5]?.name).StartsWith("HelmetGlass"))
+                if (doorMesh.sharedMaterials != null && doorMesh.sharedMaterials.Length == 7 && doorMesh.sharedMaterials[2] != null && doorMesh.sharedMaterials[2].name.StartsWith("Material.001") && doorMesh.sharedMaterials[5] != null && doorMesh.sharedMaterials[5].name.StartsWith("HelmetGlass"))
                 {
                     Material[] doorMats = doorMesh.sharedMaterials;
                     doorMats[2] = material001;
@@ -548,7 +548,7 @@ namespace Chameleon
                         doorMats[5] = helmetGlass;
                     doorMesh.sharedMaterials = doorMats;
                 }
-                else if ((doorMesh.sharedMaterial.name.StartsWith("FancyManorTex") && doorMesh.GetComponentInChildren<InteractTrigger>() != null) || doorMesh.sharedMaterial.name.StartsWith("DoorWood"))
+                else if (doorMesh.sharedMaterial != null && ((doorMesh.sharedMaterial.name.StartsWith("FancyManorTex") && doorMesh.GetComponentInChildren<InteractTrigger>() != null) || doorMesh.sharedMaterial.name.StartsWith("DoorWood")))
                 {
                     doorMesh.sharedMaterial.shader = material001.shader;
                     doorMesh.sharedMaterial.doubleSidedGI = true;
