@@ -85,6 +85,9 @@ namespace Chameleon
                 stormy.transform.position = stormPos;
                 stormy.SetActive(true);
             }
+
+            if (__instance.normalizedTimeOfDay > 0.63f)
+                SceneOverrides.UpdateDoorLightColor(__instance.normalizedTimeOfDay);
         }
 
         [HarmonyPatch(typeof(TimeOfDay), nameof(TimeOfDay.PlayTimeMusicDelayed))]

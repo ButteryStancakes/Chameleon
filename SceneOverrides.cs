@@ -17,7 +17,7 @@ namespace Chameleon
 
         static Dictionary<string, IntWithRarity[]> mineshaftWeightLists = [];
 
-        static Material breakerLightOff, fakeWindowOff, fakeWindowOn;
+        static Material breakerLightOff, /*fakeWindowOff,*/ fakeWindowOn, black;
         static List<(Renderer room, Light light)> windowTiles = [];
 
         static Material diffuseLeaves;
@@ -25,6 +25,9 @@ namespace Chameleon
         static float foliageDiffusionProfileHash;
 
         static Material material001, helmetGlass;
+
+        static SpriteRenderer lightBehindDoor;
+        static Color doorLightColor = DoorLightPalette.DEFAULT_BACKGROUND;
 
         internal static void ExteriorOverrides()
         {
@@ -146,20 +149,14 @@ namespace Chameleon
             if (Configuration.fixDoors.Value)
                 FixDoorMaterials();
 
-            string interior = RoundManager.Instance?.dungeonGenerator?.Generator?.DungeonFlow?.name;
-
-            if (string.IsNullOrEmpty(interior))
-                return;
-
-            VanillaLevelsInfo.predefinedLevels.TryGetValue(StartOfRound.Instance.currentLevel.name, out LevelCosmeticInfo currentLevelCosmeticInfo);
-
-            if (breakerLightOff == null || fakeWindowOff == null)
+            if (breakerLightOff == null || black == null/*|| fakeWindowOff == null*/)
             {
                 try
                 {
                     AssetBundle lightMats = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "lightmats"));
                     breakerLightOff = lightMats.LoadAsset<Material>("LEDLightYellowOff");
-                    fakeWindowOff = lightMats.LoadAsset<Material>("FakeWindowViewOff");
+                    //fakeWindowOff = lightMats.LoadAsset<Material>("FakeWindowViewOff");
+                    black = lightMats.LoadAsset<Material>("Blacklight");
                     lightMats.Unload(false);
                 }
                 catch
@@ -169,14 +166,15 @@ namespace Chameleon
                 }
             }
 
+            VanillaLevelsInfo.predefinedLevels.TryGetValue(StartOfRound.Instance.currentLevel.name, out LevelCosmeticInfo currentLevelCosmeticInfo);
+            string interior = RoundManager.Instance?.dungeonGenerator?.Generator?.DungeonFlow?.name;
+            if (Configuration.fancyEntranceDoors.Value && currentLevelCosmeticInfo != null)
+                SetUpFancyEntranceDoors(currentLevelCosmeticInfo, interior);
+
             if (interior == "Level2Flow"
                 // scarlet devil mansion
                 || interior == "SDMLevel")
             {
-                // set up manor doors
-                if (Configuration.fancyEntranceDoors.Value && currentLevelCosmeticInfo != null)
-                    SetUpFancyEntranceDoors(currentLevelCosmeticInfo);
-
                 // set up window tiles
                 if (interior == "Level2Flow" && Configuration.powerOffWindows.Value)
                     SetUpManorWindows();
@@ -221,14 +219,31 @@ namespace Chameleon
             }
         }
 
-        static void SetUpFancyEntranceDoors(LevelCosmeticInfo levelCosmeticInfo)
+        static void SetUpFancyEntranceDoors(LevelCosmeticInfo levelCosmeticInfo, string interior)
         {
+            Transform plane = string.IsNullOrEmpty(levelCosmeticInfo.planePath) ? null : GameObject.Find(levelCosmeticInfo.planePath)?.transform;
+            if (plane != null)
+            {
+                // fix "darkness plane" not covering the entire doorframe
+                plane.localPosition += levelCosmeticInfo.planeOffset;
+                plane.localScale = new Vector3(plane.localScale.x + 0.047f, plane.localScale.y, plane.localScale.z + 0.237f);
+                // fix shininess
+                if (black != null)
+                {
+                    Renderer rend = plane.GetComponent<Renderer>();
+                    rend.sharedMaterial = black;
+                }
+            }
+
+            // set up manor doors?
+            if (string.IsNullOrEmpty(interior) || (interior != "Level2Flow" && interior != "SDMLevel"))
+                return;
+
             GameObject fakeDoor1 = GameObject.Find(levelCosmeticInfo.fakeDoor1Path);
             GameObject fakeDoor2 = GameObject.Find(levelCosmeticInfo.fakeDoor2Path);
-            Transform plane = string.IsNullOrEmpty(levelCosmeticInfo.planePath) ? null : GameObject.Find(levelCosmeticInfo.planePath)?.transform;
             Transform frame = string.IsNullOrEmpty(levelCosmeticInfo.framePath) ? null : GameObject.Find(levelCosmeticInfo.framePath)?.transform;
 
-            if (fakeDoor1 == null || fakeDoor2 == null || (!string.IsNullOrEmpty(levelCosmeticInfo.planePath) && plane == null) || (!string.IsNullOrEmpty(levelCosmeticInfo.framePath) && frame == null))
+            if (fakeDoor1 == null || fakeDoor2 == null || (!string.IsNullOrEmpty(levelCosmeticInfo.framePath) && frame == null))
             {
                 Plugin.Logger.LogWarning("\"FancyEntranceDoors\" skipped because some GameObjects were missing.");
                 return;
@@ -269,12 +284,6 @@ namespace Chameleon
 
             if (frame != null)
                 frame.localScale = new Vector3(frame.localScale.x, frame.localScale.y + 0.05f, frame.localScale.z);
-
-            if (plane != null)
-            {
-                plane.localPosition += levelCosmeticInfo.planeOffset;
-                plane.localScale = new Vector3(plane.localScale.x + 0.047f, plane.localScale.y, plane.localScale.z + 0.237f);
-            }
         }
 
         static void RetextureCaverns(CavernType type)
@@ -407,17 +416,26 @@ namespace Chameleon
 
         static void ColorDoorLight(LevelCosmeticInfo levelCosmeticInfo)
         {
-            SpriteRenderer lightBehindDoor = Object.FindObjectsOfType<SpriteRenderer>().FirstOrDefault(spriteRenderer => spriteRenderer.name == "LightBehindDoor");
+            lightBehindDoor = Object.FindObjectsOfType<SpriteRenderer>().FirstOrDefault(spriteRenderer => spriteRenderer.name == "LightBehindDoor");
             if (lightBehindDoor != null)
             {
                 if (StartOfRound.Instance.currentLevel.currentWeather == LevelWeatherType.Eclipsed)
-                    lightBehindDoor.color = DoorLightPalette.ECLIPSE_BACKGROUND;
+                    doorLightColor = DoorLightPalette.ECLIPSE_BACKGROUND;
+                else if (StartOfRound.Instance.currentLevel.currentWeather == LevelWeatherType.Stormy || StartOfRound.Instance.currentLevel.currentWeather == LevelWeatherType.Flooded)
+                    doorLightColor = DoorLightPalette.CLOUDY_BACKGROUND;
+                else if (StartOfRound.Instance.currentLevel.currentWeather == LevelWeatherType.Foggy)
+                    doorLightColor = DoorLightPalette.FOGGY_BACKGROUND;
                 else if (IsSnowLevel())
-                    lightBehindDoor.color = DoorLightPalette.BLIZZARD_BACKGROUND;
+                    doorLightColor = DoorLightPalette.BLIZZARD_BACKGROUND;
                 else if (levelCosmeticInfo != null)
-                    lightBehindDoor.color = levelCosmeticInfo.doorLightColor;
+                    doorLightColor = levelCosmeticInfo.doorLightColor;
                 else
+                {
                     Plugin.Logger.LogDebug("Could not recolor door light - No information exists for the current level (Are you playing a custom moon?)");
+                    doorLightColor = DoorLightPalette.DEFAULT_BACKGROUND;
+                }
+
+                lightBehindDoor.color = doorLightColor;
             }
             else
                 Plugin.Logger.LogDebug("Could not recolor door light - GameObject \"LightBehindDoor\" was not found (Are you playing a custom interior?)");
@@ -462,7 +480,7 @@ namespace Chameleon
         {
             windowTiles.Clear();
 
-            if (fakeWindowOff == null)
+            if (black == null/*|| fakeWindowOff == null*/)
             {
                 Plugin.Logger.LogWarning("Skipping window caching because the asset bundle materials failed to load.");
                 return;
@@ -482,7 +500,7 @@ namespace Chameleon
                     if (fakeWindowOn == null)
                     {
                         fakeWindowOn = rend.sharedMaterials[5];
-                        fakeWindowOff.mainTexture = fakeWindowOn.GetTexture("_EmissiveColorMap");
+                        //fakeWindowOff.mainTexture = fakeWindowOn.GetTexture("_EmissiveColorMap");
                         //fakeWindowOff.mainTextureScale = fakeWindowOn.mainTextureScale;
                         //fakeWindowOff.mainTextureOffset = fakeWindowOn.mainTextureOffset;
                     }
@@ -508,13 +526,13 @@ namespace Chameleon
 
         internal static void ToggleAllWindows(bool powered)
         {
-            if (!windowsInManor || windowTiles.Count < 1 || fakeWindowOn == null || fakeWindowOff == null)
+            if (!windowsInManor || windowTiles.Count < 1 || fakeWindowOn == null || black == null/*|| fakeWindowOff == null*/)
                 return;
 
             foreach ((Renderer rend, Light light) in windowTiles)
             {
                 Material[] mats = rend.sharedMaterials;
-                mats[5] = powered ? fakeWindowOn : fakeWindowOff;
+                mats[5] = powered ? fakeWindowOn : black/*|| fakeWindowOff*/;
                 rend.sharedMaterials = mats;
                 light.enabled = powered;
             }
@@ -624,6 +642,12 @@ namespace Chameleon
         static bool FilterFoliageObjects(Renderer rend)
         {
             return rend.sharedMaterial != null && (rend.sharedMaterial.name.StartsWith("ForestTexture") || rend.sharedMaterial.name.StartsWith("TreeFlat") || rend.sharedMaterial.name.StartsWith("Leaves"));
+        }
+
+        internal static void UpdateDoorLightColor(float timeOfDay)
+        {
+            if (lightBehindDoor != null)
+                lightBehindDoor.color = Color.Lerp(doorLightColor, Color.black, Mathf.InverseLerp(0.63f, 0.996f/*0.9f*/, timeOfDay));
         }
     }
 }

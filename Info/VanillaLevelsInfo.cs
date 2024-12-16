@@ -10,8 +10,8 @@ namespace Chameleon.Info
             { "ExperimentationLevel", new(){
                 fakeDoor1Path = "/Environment/SteelDoor (6)",
                 fakeDoor2Path = "/Environment/SteelDoor (5)",
-                framePath = string.Empty,
-                planePath = string.Empty,
+                framePath = null,
+                planePath = null,
                 fancyDoorPos = new(-113.911003f, 2.89499998f, -17.6700001f),
                 fancyDoorRot = Quaternion.Euler(-90f, 0f, 0f),
                 fancyDoorScalar = new(1f, 1.07f, 1f)
@@ -19,7 +19,7 @@ namespace Chameleon.Info
             { "AssuranceLevel", new(){
                 fancyDoorPos = new(135.248993f, 6.45200014f, 74.4899979f),
                 fancyDoorRot = Quaternion.Euler(-90f, 180f, 0f),
-                planeOffset = new(0.075f, -1f, 0f)
+                planeOffset = new(0f, -1f, -0.075f)
             }},
             { "VowLevel", new(){
                 fancyDoorPos = new(-29.2789993f, -1.176f, 151.069f),
@@ -30,12 +30,12 @@ namespace Chameleon.Info
             { "OffenseLevel", new(){
                 fancyDoorPos = new(128.936005f, 16.3500004f, -53.7130013f),
                 fancyDoorRot = Quaternion.Euler(-90f, 180f, -73.621f),
-                planeOffset = new(0f, -1f, -0.075f)
+                planeOffset = new(0f, -1f, 0.027f)
             }},
             { "MarchLevel", new(){
                 fancyDoorPos = new(-158.179993f, -3.95300007f, 21.7080002f),
                 fancyDoorRot = Quaternion.Euler(-90f, 0f, 0f),
-                planeOffset = new(0f, -1f, -0.075f),
+                planeOffset = new(-0.075f, -1f, 0f),
                 //doorLightColor = DoorLightPalette.WITCHES_BACKGROUND
             }},
             { "AdamanceLevel", new(){
