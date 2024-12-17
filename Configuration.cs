@@ -2,6 +2,7 @@
 using Chameleon.Info;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering.HighDefinition;
 
 namespace Chameleon
 {
@@ -23,8 +24,9 @@ namespace Chameleon
 
         static ConfigFile configFile;
 
-        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, snowyGiants, fixDoors, fancyFoliage, fancyShrouds;
+        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, snowyGiants, fixDoorMeshes, fancyFoliage, fancyShrouds, fixDoorSounds;
         internal static ConfigEntry<GordionStorms> stormyGordion;
+        internal static ConfigEntry<FogDenoisingMode> fogMode;
 
         internal static List<MoonCavernMapping> mappings = [];
 
@@ -44,6 +46,12 @@ namespace Chameleon
                 "PlanetPreview",
                 true,
                 "The currently orbited planet is visible on the ship's external security camera while in space, as it used to be in v38.\nYou should disable this if you encounter lighting issues on the ship.");
+
+            fogMode = configFile.Bind(
+                "Exterior",
+                "FogMode",
+                FogDenoisingMode.Reprojection,
+                "\"Gaussian\" is used by vanilla, but causes fog to look grainy. \"Reprojection\" reduces this noise, but can cause visual artifacts. \"Both\" provides the best quality, but might incur a significant performance penalty.");
 
             fancyEntranceDoors = configFile.Bind(
                 "Exterior",
@@ -101,7 +109,7 @@ namespace Chameleon
                 "Interior",
                 "DoorLightColors",
                 true,
-                "Dynamically adjust the color of the light behind the entrance doors depending on where you land and the current weather.");
+                "Dynamically adjust the color of the light behind the entrance doors depending on where you land, the current weather, and the current time of day.");
 
             powerOffBreakerBox = configFile.Bind(
                 "Interior",
@@ -109,11 +117,17 @@ namespace Chameleon
                 true,
                 "When the apparatus is unplugged, the light on the breaker box will turn off to indicate it is inactive.");
 
-            fixDoors = configFile.Bind(
+            fixDoorMeshes = configFile.Bind(
                 "Interior",
-                "FixDoors",
+                "FixDoorMeshes",
                 true,
                 "Fixes the glass on the steel doors in factories (and some custom interiors) to show on both sides. Also fixes doorknobs looking incorrect on one side.");
+
+            fixDoorSounds = configFile.Bind(
+                "Interior",
+                "FixDoorSounds",
+                true,
+                "Fixes backwards open/close sounds on factory doors, breaker boxes, and storage locker doors.");
 
             InteriorManorConfig();
             InteriorMineshaftConfig();
@@ -202,6 +216,14 @@ namespace Chameleon
             {
                 configFile.Bind("Interior", oldCaveKey, false, "Legacy setting, doesn't work");
                 configFile.Remove(configFile["Interior", oldCaveKey].Definition);
+            }
+
+            if (fixDoorMeshes.Value)
+            {
+                if (!configFile.Bind("Interior", "FixDoors", true, "Legacy setting, doesn't work").Value)
+                    fixDoorMeshes.Value = false;
+
+                configFile.Remove(configFile["Interior", "FixDoors"].Definition);
             }
 
             configFile.Save();

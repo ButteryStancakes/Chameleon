@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEngine;
 using Chameleon.Info;
 using System.Collections.Generic;
+using UnityEngine.Rendering;
 using UnityEngine.Rendering.HighDefinition;
 
 namespace Chameleon
@@ -146,8 +147,11 @@ namespace Chameleon
 
         internal static void InteriorOverrides()
         {
-            if (Configuration.fixDoors.Value)
+            if (Configuration.fixDoorMeshes.Value)
                 FixDoorMaterials();
+
+            if (Configuration.fixDoorSounds.Value)
+                FixDoorSounds();
 
             if (breakerLightOff == null || black == null/*|| fakeWindowOff == null*/)
             {
@@ -647,7 +651,37 @@ namespace Chameleon
         internal static void UpdateDoorLightColor(float timeOfDay)
         {
             if (lightBehindDoor != null)
-                lightBehindDoor.color = Color.Lerp(doorLightColor, Color.black, Mathf.InverseLerp(0.63f, 0.996f/*0.9f*/, timeOfDay));
+                lightBehindDoor.color = Color.Lerp(doorLightColor, Color.black, Mathf.InverseLerp(0.63f, 0.998f/*0.9f*/, timeOfDay));
+        }
+
+        static void FixDoorSounds()
+        {
+            foreach (AnimatedObjectTrigger animatedObjectTrigger in Object.FindObjectsOfType<AnimatedObjectTrigger>())
+            {
+                if (animatedObjectTrigger.thisAudioSource != null && animatedObjectTrigger.name == "PowerBoxDoor" || animatedObjectTrigger.thisAudioSource.name == "storage door" || (animatedObjectTrigger.transform.parent?.GetComponent<Renderer>() != null && animatedObjectTrigger.transform.parent.GetComponent<Renderer>().sharedMaterials.Length == 7))
+                {
+                    AudioClip[] temp = (AudioClip[])animatedObjectTrigger.boolFalseAudios.Clone();
+                    animatedObjectTrigger.boolFalseAudios = (AudioClip[])animatedObjectTrigger.boolTrueAudios.Clone();
+                    animatedObjectTrigger.boolTrueAudios = temp;
+                    Plugin.Logger.LogDebug($"Inverted sounds on {animatedObjectTrigger.name}.AnimatedObjectTrigger");
+                }
+            }
+        }
+
+        internal static void DenoiseFog()
+        {
+            foreach (Volume volume in Object.FindObjectsOfType<Volume>())
+            {
+                if (volume.sharedProfile.TryGet(out Fog fog))
+                {
+                    if (fog.denoisingMode.GetValue<FogDenoisingMode>() != Configuration.fogMode.Value)
+                    {
+                        fog.denoisingMode.SetValue(new FogDenoisingModeParameter(FogDenoisingMode.Reprojection, true));
+                        fog.denoisingMode.overrideState = true;
+                        Plugin.Logger.LogDebug($"Changed fog denoising mode on \"{volume.name}\"");
+                    }
+                }
+            }
         }
     }
 }
