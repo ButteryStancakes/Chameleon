@@ -674,13 +674,22 @@ namespace Chameleon
             {
                 if (volume.sharedProfile.TryGet(out Fog fog))
                 {
-                    if (fog.denoisingMode.GetValue<FogDenoisingMode>() != Configuration.fogMode.Value)
+                    if (fog.denoisingMode.GetValue<FogDenoisingMode>() != FogDenoisingMode.Reprojection)
                     {
                         fog.denoisingMode.SetValue(new FogDenoisingModeParameter(FogDenoisingMode.Reprojection, true));
                         fog.denoisingMode.overrideState = true;
                         Plugin.Logger.LogDebug($"Changed fog denoising mode on \"{volume.name}\"");
                     }
                 }
+            }
+
+            foreach (HDAdditionalCameraData hdAdditionalCameraData in Object.FindObjectsOfType<HDAdditionalCameraData>())
+            {
+                if (!hdAdditionalCameraData.customRenderingSettings)
+                    continue;
+
+                hdAdditionalCameraData.renderingPathCustomFrameSettingsOverrideMask.mask[(uint)FrameSettingsField.ReprojectionForVolumetrics] = true;
+                hdAdditionalCameraData.renderingPathCustomFrameSettings.SetEnabled(FrameSettingsField.ReprojectionForVolumetrics, true);
             }
         }
     }

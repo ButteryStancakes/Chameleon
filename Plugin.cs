@@ -34,11 +34,6 @@ namespace Chameleon
 
             new Harmony(PLUGIN_GUID).PatchAll();
 
-            SceneManager.sceneLoaded += delegate
-            {
-                SceneOverrides.DenoiseFog();
-            };
-
             SceneManager.sceneUnloaded += delegate
             {
                 SceneOverrides.done = false;
@@ -46,6 +41,12 @@ namespace Chameleon
                 SceneOverrides.forceStormy = false;
                 SceneOverrides.breakerBoxOff = false;
                 SceneOverrides.windowsInManor = false;
+            };
+
+            SceneManager.sceneLoaded += delegate
+            {
+                if (Configuration.fancyFog.Value)
+                    SceneOverrides.DenoiseFog();
             };
 
             Logger.LogInfo($"{PLUGIN_NAME} v{PLUGIN_VERSION} loaded");

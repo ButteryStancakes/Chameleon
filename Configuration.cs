@@ -24,9 +24,8 @@ namespace Chameleon
 
         static ConfigFile configFile;
 
-        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, snowyGiants, fixDoorMeshes, fancyFoliage, fancyShrouds, fixDoorSounds;
+        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, snowyGiants, fixDoorMeshes, fancyFoliage, fancyShrouds, fixDoorSounds, fancyFog;
         internal static ConfigEntry<GordionStorms> stormyGordion;
-        internal static ConfigEntry<FogDenoisingMode> fogMode;
 
         internal static List<MoonCavernMapping> mappings = [];
 
@@ -47,11 +46,11 @@ namespace Chameleon
                 true,
                 "The currently orbited planet is visible on the ship's external security camera while in space, as it used to be in v38.\nYou should disable this if you encounter lighting issues on the ship.");
 
-            fogMode = configFile.Bind(
+            fancyFog = configFile.Bind(
                 "Exterior",
-                "FogMode",
-                FogDenoisingMode.Reprojection,
-                "\"Gaussian\" is used by vanilla, but causes fog to look grainy. \"Reprojection\" reduces this noise, but can cause visual artifacts. \"Both\" provides the best quality, but might incur a significant performance penalty.");
+                "FancyFog",
+                false,
+                "Reduces the noise/\"graininess\" visible in fog, and improves the definition of light shapes. Note that this will cause some strange visual artifacts, like flashlights leaving \"trails\" behind the beam.");
 
             fancyEntranceDoors = configFile.Bind(
                 "Exterior",
