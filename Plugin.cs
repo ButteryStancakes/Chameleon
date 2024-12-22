@@ -45,8 +45,8 @@ namespace Chameleon
 
             SceneManager.sceneLoaded += delegate
             {
-                if (Configuration.fancyFog.Value)
-                    SceneOverrides.DenoiseFog();
+                if (Configuration.fancyFog.Value || Configuration.fogQuality.Value != Configuration.FogQualities.Default)
+                    SceneOverrides.DenoiseFogAndSetQuality();
             };
 
             Logger.LogInfo($"{PLUGIN_NAME} v{PLUGIN_VERSION} loaded");

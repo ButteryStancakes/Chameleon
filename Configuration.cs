@@ -15,6 +15,13 @@ namespace Chameleon
             Always
         }
 
+        internal enum FogQualities
+        {
+            Default,
+            Medium,
+            High
+        }
+
         internal struct MoonCavernMapping
         {
             internal string moon;
@@ -26,6 +33,8 @@ namespace Chameleon
 
         internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, snowyGiants, fixDoorMeshes, fancyFoliage, fancyShrouds, fixDoorSounds, fancyFog;
         internal static ConfigEntry<GordionStorms> stormyGordion;
+        internal static ConfigEntry<FogQualities> fogQuality;
+
 
         internal static List<MoonCavernMapping> mappings = [];
 
@@ -51,6 +60,12 @@ namespace Chameleon
                 "FancyFog",
                 false,
                 "Reduces the noise/\"graininess\" visible in fog, and improves the definition of light shapes. Note that this will cause some strange visual artifacts, like flashlights leaving \"trails\" behind the beam.");
+
+            fogQuality = configFile.Bind(
+                "Exterior",
+                "FogQuality",
+                FogQualities.Default,
+                "Controls the overall quality of the fog's sample rate. ");
 
             fancyEntranceDoors = configFile.Bind(
                 "Exterior",
