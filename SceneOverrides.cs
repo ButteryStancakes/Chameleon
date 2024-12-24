@@ -668,29 +668,43 @@ namespace Chameleon
             }
         }
 
-        internal static void DenoiseFog()
+        internal static void DenoiseFogAndSetQuality()
         {
             foreach (Volume volume in Object.FindObjectsOfType<Volume>())
             {
                 if (volume.sharedProfile.TryGet(out Fog fog))
                 {
-                    if (fog.denoisingMode.GetValue<FogDenoisingMode>() != FogDenoisingMode.Reprojection)
+                    if (fog.denoisingMode.GetValue<FogDenoisingMode>() != FogDenoisingMode.Reprojection && Configuration.fancyFog.Value)
                     {
                         fog.denoisingMode.SetValue(new FogDenoisingModeParameter(FogDenoisingMode.Reprojection, true));
                         fog.denoisingMode.overrideState = true;
                         Plugin.Logger.LogDebug($"Changed fog denoising mode on \"{volume.name}\"");
                     }
+
+                    var qualityValue = Configuration.fogQuality.Value switch
+                    {
+                        Configuration.FogQualities.Medium => 1,
+                        Configuration.FogQualities.High => 2,
+                        _ => (int?)null
+                    };
+
+                    if (qualityValue.HasValue)
+                    {
+                        fog.quality.Override(qualityValue.Value);
+                        Plugin.Logger.LogDebug($"Changed fog quality mode on \"{volume.name}\" to \"{fog.quality.value}\"");
+                    }
                 }
             }
 
-            foreach (HDAdditionalCameraData hdAdditionalCameraData in Object.FindObjectsOfType<HDAdditionalCameraData>())
-            {
-                if (!hdAdditionalCameraData.customRenderingSettings)
-                    continue;
+            if (Configuration.fancyFog.Value)
+                foreach (HDAdditionalCameraData hdAdditionalCameraData in Object.FindObjectsOfType<HDAdditionalCameraData>())
+                {
+                    if (!hdAdditionalCameraData.customRenderingSettings)
+                        continue;
 
-                hdAdditionalCameraData.renderingPathCustomFrameSettingsOverrideMask.mask[(uint)FrameSettingsField.ReprojectionForVolumetrics] = true;
-                hdAdditionalCameraData.renderingPathCustomFrameSettings.SetEnabled(FrameSettingsField.ReprojectionForVolumetrics, true);
-            }
+                    hdAdditionalCameraData.renderingPathCustomFrameSettingsOverrideMask.mask[(uint)FrameSettingsField.ReprojectionForVolumetrics] = true;
+                    hdAdditionalCameraData.renderingPathCustomFrameSettings.SetEnabled(FrameSettingsField.ReprojectionForVolumetrics, true);
+                }
         }
     }
 }
