@@ -187,7 +187,7 @@ namespace Chameleon
                 || interior == "SDMLevel")
             {
                 // set up window tiles
-                if (interior == "Level2Flow" && Configuration.powerOffWindows.Value)
+                if (interior == "Level2Flow" && (Configuration.powerOffWindows.Value || Configuration.windowVariants.Value))
                     SetUpManorWindows(currentLevelCosmeticInfo);
             }
             else
