@@ -2,7 +2,6 @@
 using Chameleon.Info;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Rendering.HighDefinition;
 
 namespace Chameleon
 {
@@ -15,7 +14,7 @@ namespace Chameleon
             Always
         }
 
-        internal enum FogQualities
+        internal enum FogQuality
         {
             Default,
             Medium,
@@ -31,10 +30,10 @@ namespace Chameleon
 
         static ConfigFile configFile;
 
-        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, snowyGiants, fixDoorMeshes, fancyFoliage, fancyShrouds, fixDoorSounds, fancyFog;
+        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, snowyGiants, fixDoorMeshes, fancyFoliage, fancyShrouds, fixDoorSounds, fogReprojection, windowVariants, fixTitanVolume, fixArtificeVolume;
         internal static ConfigEntry<GordionStorms> stormyGordion;
-        internal static ConfigEntry<FogQualities> fogQuality;
-
+        internal static ConfigEntry<FogQuality> fogQuality;
+        internal static ConfigEntry<float> weatherAmbience;
 
         internal static List<MoonCavernMapping> mappings = [];
 
@@ -42,48 +41,64 @@ namespace Chameleon
         {
             configFile = cfg;
 
+            RenderingConfig();
             ExteriorConfig();
             InteriorConfig();
             MigrateLegacyConfigs();
         }
 
-        static void ExteriorConfig()
+        static void RenderingConfig()
         {
             planetPreview = configFile.Bind(
-                "Exterior",
+                "Rendering",
                 "PlanetPreview",
                 true,
                 "The currently orbited planet is visible on the ship's external security camera while in space, as it used to be in v38.\nYou should disable this if you encounter lighting issues on the ship.");
 
-            fancyFog = configFile.Bind(
-                "Exterior",
-                "FancyFog",
-                false,
-                "Reduces the noise/\"graininess\" visible in fog, and improves the definition of light shapes. Note that this will cause some strange visual artifacts, like flashlights leaving \"trails\" behind the beam.");
-
-            fogQuality = configFile.Bind(
-                "Exterior",
-                "FogQuality",
-                FogQualities.Default,
-                "Controls the overall quality of the fog's sample rate. ");
-
-            fancyEntranceDoors = configFile.Bind(
-                "Exterior",
-                "FancyEntranceDoors",
-                true,
-                "Changes the front doors to match how they look on the inside when a manor interior generates. (Works for ONLY vanilla levels!)");
-
             fancyFoliage = configFile.Bind(
-                "Exterior",
+                "Rendering",
                 "FancyFoliage",
                 true,
                 "Light passes and spreads through the foliage for nicer visuals. Performance impact is negligible.");
 
             fancyShrouds = configFile.Bind(
-                "Exterior",
+                "Rendering",
                 "FancyShrouds",
                 true,
                 "Applies FancyFoliage's changes to Vain Shrouds as well. (Really puts the \"vain\" in Vain Shrouds.)");
+
+            fogQuality = configFile.Bind(
+                "Rendering",
+                "FogQuality",
+                FogQuality.Default,
+                "Controls the overall quality of the fog. Be aware that using anything other than \"Default\" will incur a performance penalty.");
+
+            fogReprojection = configFile.Bind(
+                "Rendering",
+                "FogReprojection",
+                false,
+                "Reduces the noise/\"graininess\" visible in fog, and improves the definition of light shapes. This will improve visuals without hitting performance as much as the FogQuality setting, but note that this will cause some strange artifacts, like flashlights leaving \"trails\" behind the beam.");
+
+            fixTitanVolume = configFile.Bind(
+                "Rendering",
+                "FixTitanVolume",
+                true,
+                "Fixes Titan's global volume erroneously using the default profile instead of the snowy moon profile. This mainly fixes the sky being too brightly visible.");
+
+            fixArtificeVolume = configFile.Bind(
+                "Rendering",
+                "FixArtificeVolume",
+                false,
+                "\"Fixes\" Artifice's global volume, which has the exact opposite issue of Titan. This is more of a subjective change, but makes Artifice look more vibrant.");
+        }
+
+        static void ExteriorConfig()
+        {
+            fancyEntranceDoors = configFile.Bind(
+                "Exterior",
+                "FancyEntranceDoors",
+                true,
+                "Changes the front doors to match how they look on the inside when a manor interior generates. (Works for ONLY vanilla levels!)");
 
             recolorRandomRocks = configFile.Bind(
                 "Exterior",
@@ -114,7 +129,6 @@ namespace Chameleon
                 "SnowyGiants",
                 true,
                 "When the surface is snowy, Forest Keepers will blend in a little better with the environment.\nIf you are experiencing issues with giants and have other skin mods installed, you should probably disable this setting.");
-
         }
 
         static void InteriorConfig()
@@ -143,6 +157,14 @@ namespace Chameleon
                 true,
                 "Fixes backwards open/close sounds on factory doors, breaker boxes, and storage locker doors.");
 
+            weatherAmbience = configFile.Bind(
+                "Interior",
+                "WeatherAmbience",
+                0.7f,
+                new ConfigDescription(
+                    "On moons where a blizzard or rainstorm is present, you will be able to hear it faintly while inside the building. Set volume from 0 (silent) to 1 (max).",
+                    new AcceptableValueRange<float>(0f, 1f)));
+
             InteriorManorConfig();
             InteriorMineshaftConfig();
         }
@@ -154,6 +176,12 @@ namespace Chameleon
                 "PowerOffWindows",
                 true,
                 "When the breaker box is turned off, the \"fake window\" rooms will also turn off.");
+
+            windowVariants = configFile.Bind(
+                "Interior.Manor",
+                "WindowVariants",
+                true,
+                "The images displayed on the \"fake windows\" will change depending on the moon's exterior.");
         }
 
         static void InteriorMineshaftConfig()
@@ -236,6 +264,15 @@ namespace Chameleon
             {
                 if (!configFile.Bind("Interior", "FixDoors", true, "Legacy setting, doesn't work").Value)
                     fixDoorMeshes.Value = false;
+
+                if (!configFile.Bind("Exterior", "PlanetPreview", true, "Legacy setting, doesn't work").Value)
+                    planetPreview.Value = false;
+
+                if (!configFile.Bind("Exterior", "FancyFoliage", true, "Legacy setting, doesn't work").Value)
+                    fancyFoliage.Value = false;
+
+                if (!configFile.Bind("Exterior", "FancyShrouds", true, "Legacy setting, doesn't work").Value)
+                    fancyShrouds.Value = false;
 
                 configFile.Remove(configFile["Interior", "FixDoors"].Definition);
             }

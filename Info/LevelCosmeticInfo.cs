@@ -13,5 +13,8 @@ namespace Chameleon.Info
 
         // DoorLightColors
         internal Color doorLightColor = new(0.490566f, 0.4165709f, 0.3355286f);
+
+        // WindowVariants
+        internal string windowMatName = null;
     }
 }

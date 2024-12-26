@@ -14,12 +14,14 @@ namespace Chameleon.Info
                 planePath = null,
                 fancyDoorPos = new(-113.911003f, 2.89499998f, -17.6700001f),
                 fancyDoorRot = Quaternion.Euler(-90f, 0f, 0f),
-                fancyDoorScalar = new(1f, 1.07f, 1f)
+                fancyDoorScalar = new(1f, 1.07f, 1f),
+                windowMatName = "FakeWindowView2"
             }},
             { "AssuranceLevel", new(){
                 fancyDoorPos = new(135.248993f, 6.45200014f, 74.4899979f),
                 fancyDoorRot = Quaternion.Euler(-90f, 180f, 0f),
-                planeOffset = new(0f, -1f, -0.075f)
+                planeOffset = new(0f, -1f, -0.075f),
+                windowMatName = "FakeWindowView2"
             }},
             { "VowLevel", new(){
                 fancyDoorPos = new(-29.2789993f, -1.176f, 151.069f),
@@ -30,7 +32,8 @@ namespace Chameleon.Info
             { "OffenseLevel", new(){
                 fancyDoorPos = new(128.936005f, 16.3500004f, -53.7130013f),
                 fancyDoorRot = Quaternion.Euler(-90f, 180f, -73.621f),
-                planeOffset = new(0f, -1f, 0.027f)
+                planeOffset = new(0f, -1f, 0.027f),
+                windowMatName = "FakeWindowView2"
             }},
             { "MarchLevel", new(){
                 fancyDoorPos = new(-158.179993f, -3.95300007f, 21.7080002f),
@@ -52,23 +55,27 @@ namespace Chameleon.Info
                 fancyDoorPos = new(-195.470001f, 6.35699987f, -7.82999992f),
                 fancyDoorRot = Quaternion.Euler(-90f, 0f, 39.517f),
                 planeOffset = new(-0.045f, -1f, -0.05513f),
-                doorLightColor = DoorLightPalette.AMETHYST_BACKGROUND
+                doorLightColor = DoorLightPalette.AMETHYST_BACKGROUND,
+                windowMatName = "FakeWindowView4"
             }},
             { "RendLevel", new(){
                 fancyDoorPos = new(50.5449982f, -16.8225021f, -152.716583f),
                 fancyDoorRot = Quaternion.Euler(-90f, 180f, 64.342f),
-                doorLightColor = DoorLightPalette.BLIZZARD_BACKGROUND
+                doorLightColor = DoorLightPalette.BLIZZARD_BACKGROUND,
+                windowMatName = "FakeWindowView3"
             }},
             { "DineLevel", new(){
                 fancyDoorPos = new(-120.709869f, -16.3370018f, -4.26810265f),
                 fancyDoorRot = Quaternion.Euler(-90f, 0f, 90.836f),
-                doorLightColor = DoorLightPalette.BLIZZARD_BACKGROUND
+                doorLightColor = DoorLightPalette.BLIZZARD_BACKGROUND,
+                windowMatName = "FakeWindowView3"
             }},
             { "TitanLevel", new(){
                 fancyDoorPos = new(-35.8769989f, 47.64f, 8.93900013f),
                 fancyDoorRot = Quaternion.Euler(-90f, 0f, 35.333f),
                 planeOffset = new(0.03f, -1f, 0.036f),
-                doorLightColor = DoorLightPalette.BLIZZARD_BACKGROUND
+                doorLightColor = DoorLightPalette.BLIZZARD_BACKGROUND,
+                windowMatName = "FakeWindowView3"
             }},
             { "ArtificeLevel", new(){
                 fakeDoor1Path = "/Environment/MainFactory/SteelDoorFake",

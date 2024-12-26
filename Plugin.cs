@@ -41,12 +41,16 @@ namespace Chameleon
                 SceneOverrides.forceStormy = false;
                 SceneOverrides.breakerBoxOff = false;
                 SceneOverrides.windowsInManor = false;
+                if (SceneOverrides.blizzardInside != null)
+                    SceneOverrides.blizzardInside.Stop();
+                if (SceneOverrides.rainInside != null)
+                    SceneOverrides.rainInside.Stop();
+                SceneOverrides.mineshaft = false;
             };
 
             SceneManager.sceneLoaded += delegate
             {
-                if (Configuration.fancyFog.Value || Configuration.fogQuality.Value != Configuration.FogQualities.Default)
-                    SceneOverrides.DenoiseFogAndSetQuality();
+                SceneOverrides.ApplyFogSettings();
             };
 
             Logger.LogInfo($"{PLUGIN_NAME} v{PLUGIN_VERSION} loaded");
@@ -80,7 +84,7 @@ namespace Chameleon
         {
             if (SceneOverrides.forceRainy)
             {
-                if ((!GameNetworkManager.Instance.localPlayerController.isInsideFactory && !GameNetworkManager.Instance.localPlayerController.isPlayerDead) || (GameNetworkManager.Instance.localPlayerController.spectatedPlayerScript != null && !GameNetworkManager.Instance.localPlayerController.spectatedPlayerScript.isInsideFactory))
+                if (!SceneOverrides.IsCameraInside())
                     __instance.effects[(int)LevelWeatherType.Rainy].effectEnabled = true;
             }
             else if (SceneOverrides.forceStormy)
@@ -94,6 +98,8 @@ namespace Chameleon
 
             if (__instance.normalizedTimeOfDay > 0.63f)
                 SceneOverrides.UpdateDoorLightColor(__instance.normalizedTimeOfDay);
+
+            SceneOverrides.UpdateWeatherAmbience();
         }
 
         [HarmonyPatch(typeof(TimeOfDay), nameof(TimeOfDay.PlayTimeMusicDelayed))]
@@ -125,6 +131,7 @@ namespace Chameleon
         static void StartOfRoundPostStart()
         {
             SceneOverrides.BuildWeightLists();
+            //SceneOverrides.SetUpWeatherAmbience();
         }
 
         [HarmonyPatch(typeof(RoundManager), "Update")]
@@ -254,5 +261,19 @@ namespace Chameleon
             if (Configuration.fancyShrouds.Value)
                 SceneOverrides.ApplyFoliageDiffusion(__instance.moldPrefab.GetComponentsInChildren<Renderer>().Where(rend => rend.gameObject.layer != 22));
         }
+
+        // why does this not work when restarting the game??
+        /*[HarmonyPatch(typeof(GameNetworkManager), "Start")]
+        [HarmonyPostfix]
+        static void PostDisconnect(GameNetworkManager __instance)
+        {
+            if (SceneOverrides.blizzardInside != null)
+                Object.Destroy(SceneOverrides.blizzardInside.gameObject);
+            if (SceneOverrides.stormInside != null)
+                Object.Destroy(SceneOverrides.stormInside.gameObject);
+
+            SceneOverrides.blizzardInside = null;
+            SceneOverrides.stormInside = null;
+        }*/
     }
 }

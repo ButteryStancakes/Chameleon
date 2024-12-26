@@ -12,7 +12,8 @@ namespace Chameleon
 {
     internal static class SceneOverrides
     {
-        internal static bool done, forceRainy, forceStormy, breakerBoxOff, windowsInManor;
+        internal static bool done, forceRainy, forceStormy, breakerBoxOff, windowsInManor, mineshaft;
+        internal static AudioSource blizzardInside, rainInside;
 
         static GameObject artificeBlizzard;
 
@@ -29,6 +30,8 @@ namespace Chameleon
 
         static SpriteRenderer lightBehindDoor;
         static Color doorLightColor = DoorLightPalette.DEFAULT_BACKGROUND;
+
+        static AudioClip backgroundStorm, backgroundFlood, backgroundRain;
 
         internal static void ExteriorOverrides()
         {
@@ -153,6 +156,9 @@ namespace Chameleon
             if (Configuration.fixDoorSounds.Value)
                 FixDoorSounds();
 
+            if (Configuration.weatherAmbience.Value > 0f)
+                SetUpWeatherAmbience();
+
             if (breakerLightOff == null || black == null/*|| fakeWindowOff == null*/)
             {
                 try
@@ -170,7 +176,8 @@ namespace Chameleon
                 }
             }
 
-            VanillaLevelsInfo.predefinedLevels.TryGetValue(StartOfRound.Instance.currentLevel.name, out LevelCosmeticInfo currentLevelCosmeticInfo);
+            LevelCosmeticInfo currentLevelCosmeticInfo = GetLevelCosmeticInfo(StartOfRound.Instance.currentLevel.name);
+
             string interior = RoundManager.Instance?.dungeonGenerator?.Generator?.DungeonFlow?.name;
             if (Configuration.fancyEntranceDoors.Value && currentLevelCosmeticInfo != null)
                 SetUpFancyEntranceDoors(currentLevelCosmeticInfo, interior);
@@ -181,7 +188,7 @@ namespace Chameleon
             {
                 // set up window tiles
                 if (interior == "Level2Flow" && Configuration.powerOffWindows.Value)
-                    SetUpManorWindows();
+                    SetUpManorWindows(currentLevelCosmeticInfo);
             }
             else
             {
@@ -192,6 +199,8 @@ namespace Chameleon
                 // mineshaft retextures
                 if (interior == "Level3Flow")
                 {
+                    mineshaft = true;
+
                     if (Configuration.autoAdaptSnow.Value && IsSnowLevel() && (artificeBlizzard != null || !VanillaLevelsInfo.predefinedLevels.ContainsKey(StartOfRound.Instance.currentLevel.name)))
                     {
                         RetextureCaverns(CavernType.Ice);
@@ -221,6 +230,30 @@ namespace Chameleon
                         Plugin.Logger.LogDebug("No custom cave weights were defined for the current moon. Falling back to vanilla caverns");
                 }
             }
+        }
+
+        static LevelCosmeticInfo GetLevelCosmeticInfo(string levelName)
+        {
+            VanillaLevelsInfo.predefinedLevels.TryGetValue(levelName, out LevelCosmeticInfo info);
+
+            if (info == null)
+            {
+                switch (levelName)
+                {
+                    case "ReMarchSelectable":
+                        return VanillaLevelsInfo.predefinedLevels["MarchLevel"];
+                    case "ReOffenseLevel":
+                        return VanillaLevelsInfo.predefinedLevels["OffenseLevel"];
+                    case "ReAdamanceLevel":
+                        return VanillaLevelsInfo.predefinedLevels["AdamanceLevel"];
+                    /*case "ReDineLevel":
+                        return VanillaLevelsInfo.predefinedLevels["DineLevel"];*/
+                    case "ReTitanLevel":
+                        return VanillaLevelsInfo.predefinedLevels["TitanLevel"];
+                }
+            }
+
+            return info;
         }
 
         static void SetUpFancyEntranceDoors(LevelCosmeticInfo levelCosmeticInfo, string interior)
@@ -409,7 +442,7 @@ namespace Chameleon
                         Plugin.Logger.LogDebug($"{level.name} - {mapping.type} @ {mapping.weight}");
                     }
                     if (tempWeights.Count > 0)
-                        mineshaftWeightLists.Add(level.name, tempWeights.ToArray());
+                        mineshaftWeightLists.Add(level.name, [.. tempWeights]);
                 }
                 catch
                 {
@@ -480,9 +513,30 @@ namespace Chameleon
                 Plugin.Logger.LogWarning("Can't disable breaker box light because material is missing. Asset bundle(s) were likely installed incorrectly");
         }
 
-        static void SetUpManorWindows()
+        static void SetUpManorWindows(LevelCosmeticInfo levelCosmeticInfo)
         {
             windowTiles.Clear();
+
+            string windowMatName = IsSnowLevel() ? "FakeWindowView3" : levelCosmeticInfo?.windowMatName;
+            if (!string.IsNullOrEmpty(windowMatName))
+            {
+                if (fakeWindowOn == null || !fakeWindowOn.name.StartsWith(windowMatName))
+                {
+                    try
+                    {
+                        AssetBundle lightmats = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "lightmats"));
+                        fakeWindowOn = lightmats.LoadAsset<Material>(windowMatName);
+                        lightmats.Unload(false);
+                    }
+                    catch
+                    {
+                        Plugin.Logger.LogError("Encountered some error loading assets from bundle \"lightmats\". Did you install the plugin correctly?");
+                        return;
+                    }
+                }
+            }
+            else
+                fakeWindowOn = null;
 
             if (black == null/*|| fakeWindowOff == null*/)
             {
@@ -504,6 +558,8 @@ namespace Chameleon
                     if (fakeWindowOn == null)
                     {
                         fakeWindowOn = rend.sharedMaterials[5];
+
+                        // too much work to maintain this with window variants, at least for now - maybe refactor and re-enable this at some point? I'm sure some would appreciate
                         //fakeWindowOff.mainTexture = fakeWindowOn.GetTexture("_EmissiveColorMap");
                         //fakeWindowOff.mainTextureScale = fakeWindowOn.mainTextureScale;
                         //fakeWindowOff.mainTextureOffset = fakeWindowOn.mainTextureOffset;
@@ -511,6 +567,13 @@ namespace Chameleon
                     Light screenLight = rend.transform.parent.Find("ScreenLight")?.GetComponent<Light>();
                     if (screenLight != null)
                     {
+                        // sandy
+                        if (windowMatName == "FakeWindowView4")
+                            screenLight.colorTemperature = 5835f;
+                        // sandier
+                        else if (windowMatName == "FakeWindowView2")
+                            screenLight.colorTemperature = 5500f;
+
                         windowTiles.Add((rend, screenLight));
                         Plugin.Logger.LogDebug("Cached window tile instance");
                     }
@@ -525,6 +588,8 @@ namespace Chameleon
                 BreakerBox breakerBox = Object.FindObjectOfType<BreakerBox>();
                 if (breakerBox != null && breakerBox.leversSwitchedOff > 0)
                     ToggleAllWindows(false);
+                else if (!string.IsNullOrEmpty(windowMatName))
+                    ToggleAllWindows(true);
             }
         }
 
@@ -658,36 +723,63 @@ namespace Chameleon
         {
             foreach (AnimatedObjectTrigger animatedObjectTrigger in Object.FindObjectsOfType<AnimatedObjectTrigger>())
             {
-                if (animatedObjectTrigger.thisAudioSource != null && animatedObjectTrigger.name == "PowerBoxDoor" || animatedObjectTrigger.thisAudioSource.name == "storage door" || (animatedObjectTrigger.transform.parent?.GetComponent<Renderer>() != null && animatedObjectTrigger.transform.parent.GetComponent<Renderer>().sharedMaterials.Length == 7))
+                if (animatedObjectTrigger.thisAudioSource != null)
                 {
-                    AudioClip[] temp = (AudioClip[])animatedObjectTrigger.boolFalseAudios.Clone();
-                    animatedObjectTrigger.boolFalseAudios = (AudioClip[])animatedObjectTrigger.boolTrueAudios.Clone();
-                    animatedObjectTrigger.boolTrueAudios = temp;
-                    Plugin.Logger.LogDebug($"Inverted sounds on {animatedObjectTrigger.name}.AnimatedObjectTrigger");
+                    Renderer rend = animatedObjectTrigger.transform.parent?.GetComponent<Renderer>();
+                    if (animatedObjectTrigger.name == "PowerBoxDoor" || animatedObjectTrigger.thisAudioSource.name == "storage door" || (rend != null && rend.sharedMaterials.Length == 7))
+                    {
+                        AudioClip[] temp = (AudioClip[])animatedObjectTrigger.boolFalseAudios.Clone();
+                        animatedObjectTrigger.boolFalseAudios = (AudioClip[])animatedObjectTrigger.boolTrueAudios.Clone();
+                        animatedObjectTrigger.boolTrueAudios = temp;
+                        Plugin.Logger.LogDebug($"Inverted sounds on {animatedObjectTrigger.name}.AnimatedObjectTrigger");
+                    }
                 }
             }
         }
 
-        internal static void DenoiseFogAndSetQuality()
+        internal static void ApplyFogSettings()
         {
             foreach (Volume volume in Object.FindObjectsOfType<Volume>())
             {
+                if (volume.name == "Sky and Fog Global Volume")
+                {
+                    string profile = null;
+                    if (Configuration.fixTitanVolume.Value && StartOfRound.Instance.currentLevel.name == "TitanLevel")
+                        profile = "SnowyFog";
+                    else if (Configuration.fixArtificeVolume.Value && StartOfRound.Instance.currentLevel.name == "ArtificeLevel" && !IsSnowLevel())
+                        profile = "Sky and Fog Settings Profile";
+
+                    if (!string.IsNullOrEmpty(profile))
+                    {
+                        try
+                        {
+                            AssetBundle volumetricProfiles = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "volumetricprofiles"));
+                            volume.profile = volumetricProfiles.LoadAsset<VolumeProfile>(profile) ?? volume.profile;
+                            Plugin.Logger.LogDebug($"Changed profile on \"{volume.name}\"");
+                            volumetricProfiles.Unload(false);
+                        }
+                        catch
+                        {
+                            Plugin.Logger.LogError("Encountered some error loading assets from bundle \"volumetricprofiles\". Did you install the plugin correctly?");
+                        }
+                    }
+                }
+
                 if (volume.sharedProfile.TryGet(out Fog fog))
                 {
-                    if (fog.denoisingMode.GetValue<FogDenoisingMode>() != FogDenoisingMode.Reprojection && Configuration.fancyFog.Value)
+                    if (Configuration.fogReprojection.Value && fog.denoisingMode.GetValue<FogDenoisingMode>() != FogDenoisingMode.Reprojection)
                     {
                         fog.denoisingMode.SetValue(new FogDenoisingModeParameter(FogDenoisingMode.Reprojection, true));
                         fog.denoisingMode.overrideState = true;
                         Plugin.Logger.LogDebug($"Changed fog denoising mode on \"{volume.name}\"");
                     }
 
-                    var qualityValue = Configuration.fogQuality.Value switch
+                    int? qualityValue = Configuration.fogQuality.Value switch
                     {
-                        Configuration.FogQualities.Medium => 1,
-                        Configuration.FogQualities.High => 2,
-                        _ => (int?)null
+                        Configuration.FogQuality.Medium => 1,
+                        Configuration.FogQuality.High => 2,
+                        _ => null
                     };
-
                     if (qualityValue.HasValue)
                     {
                         fog.quality.Override(qualityValue.Value);
@@ -696,7 +788,8 @@ namespace Chameleon
                 }
             }
 
-            if (Configuration.fancyFog.Value)
+            if (Configuration.fogReprojection.Value)
+            {
                 foreach (HDAdditionalCameraData hdAdditionalCameraData in Object.FindObjectsOfType<HDAdditionalCameraData>())
                 {
                     if (!hdAdditionalCameraData.customRenderingSettings)
@@ -705,6 +798,112 @@ namespace Chameleon
                     hdAdditionalCameraData.renderingPathCustomFrameSettingsOverrideMask.mask[(uint)FrameSettingsField.ReprojectionForVolumetrics] = true;
                     hdAdditionalCameraData.renderingPathCustomFrameSettings.SetEnabled(FrameSettingsField.ReprojectionForVolumetrics, true);
                 }
+            }
+        }
+
+        internal static bool IsCameraInside()
+        {
+            if (!GameNetworkManager.Instance.localPlayerController.isPlayerDead)
+                return GameNetworkManager.Instance.localPlayerController.isInsideFactory;
+
+            return GameNetworkManager.Instance.localPlayerController.spectatedPlayerScript != null && GameNetworkManager.Instance.localPlayerController.spectatedPlayerScript.isInsideFactory;
+        }
+
+        internal static void SetUpWeatherAmbience()
+        {
+            if (blizzardInside == null || rainInside == null)
+            {
+                if (blizzardInside == null)
+                {
+                    blizzardInside = new GameObject("Chameleon_BlizzardInside").AddComponent<AudioSource>();
+                    Object.DontDestroyOnLoad(blizzardInside.gameObject);
+                }
+
+                if (rainInside == null)
+                {
+                    rainInside = new GameObject("Chameleon_StormInside").AddComponent<AudioSource>();
+                    Object.DontDestroyOnLoad(rainInside.gameObject);
+                }
+
+                foreach (AudioSource weatherAudio in new AudioSource[] { blizzardInside, rainInside })
+                {
+                    weatherAudio.playOnAwake = false;
+                    weatherAudio.loop = true;
+                    weatherAudio.outputAudioMixerGroup = SoundManager.Instance.ambienceAudio.outputAudioMixerGroup;
+                }
+            }
+
+            if (blizzardInside.clip == null || backgroundStorm == null || backgroundFlood == null || backgroundRain == null)
+            {
+                try
+                {
+                    AssetBundle weatherAmbience = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "weatherambience"));
+                    blizzardInside.clip = weatherAmbience.LoadAsset<AudioClip>("SnowOutside");
+                    backgroundStorm = weatherAmbience.LoadAsset<AudioClip>("StormOutside");
+                    backgroundFlood = weatherAmbience.LoadAsset<AudioClip>("FloodOutside");
+                    backgroundRain = weatherAmbience.LoadAsset<AudioClip>("RainOutside");
+                    weatherAmbience.Unload(false);
+                }
+                catch
+                {
+                    Plugin.Logger.LogError("Encountered some error loading assets from bundle \"weatherambience\". Did you install the plugin correctly?");
+                    return;
+                }
+            }
+
+            rainInside.clip = StartOfRound.Instance.currentLevel.currentWeather switch
+            {
+                LevelWeatherType.Stormy => backgroundStorm,
+                LevelWeatherType.Flooded => backgroundFlood,
+                LevelWeatherType.Rainy => backgroundRain,
+                _ => null
+            };
+
+            if (rainInside.clip == null && forceRainy)
+                rainInside.clip = backgroundRain;
+        }
+
+        internal static void UpdateWeatherAmbience()
+        {
+            if (blizzardInside == null || rainInside == null)
+                return;
+
+            if (IsCameraInside())
+            {
+                if (Configuration.weatherAmbience.Value > 0f)
+                {
+                    bool blizzard = IsSnowLevel();
+                    float volume = Configuration.weatherAmbience.Value;
+
+                    if (blizzard && rainInside.clip != null)
+                        volume *= 0.85f;
+
+                    if (mineshaft && rainInside.clip != backgroundFlood)
+                        volume *= 0.84f;
+
+                    if (blizzard)
+                    {
+                        blizzardInside.volume = volume;
+                        if (!blizzardInside.isPlaying && blizzardInside.clip != null)
+                            blizzardInside.Play();
+                    }
+
+                    if (rainInside.clip != null)
+                    {
+                        rainInside.volume = volume;
+                        if (!rainInside.isPlaying)
+                            rainInside.Play();
+                    }
+                }
+            }
+            else
+            {
+                if (blizzardInside.isPlaying)
+                    blizzardInside.Stop();
+
+                if (rainInside.isPlaying)
+                    rainInside.Stop();
+            }
         }
     }
 }
