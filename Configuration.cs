@@ -265,16 +265,31 @@ namespace Chameleon
                 if (!configFile.Bind("Interior", "FixDoors", true, "Legacy setting, doesn't work").Value)
                     fixDoorMeshes.Value = false;
 
+                configFile.Remove(configFile["Interior", "FixDoors"].Definition);
+            }
+
+            if (planetPreview.Value)
+            {
                 if (!configFile.Bind("Exterior", "PlanetPreview", true, "Legacy setting, doesn't work").Value)
                     planetPreview.Value = false;
 
+                configFile.Remove(configFile["Exterior", "PlanetPreview"].Definition);
+            }
+
+            if (fancyFoliage.Value)
+            {
                 if (!configFile.Bind("Exterior", "FancyFoliage", true, "Legacy setting, doesn't work").Value)
                     fancyFoliage.Value = false;
 
+                configFile.Remove(configFile["Exterior", "FancyFoliage"].Definition);
+            }
+
+            if (fancyShrouds.Value)
+            {
                 if (!configFile.Bind("Exterior", "FancyShrouds", true, "Legacy setting, doesn't work").Value)
                     fancyShrouds.Value = false;
 
-                configFile.Remove(configFile["Interior", "FixDoors"].Definition);
+                configFile.Remove(configFile["Exterior", "FancyShrouds"].Definition);
             }
 
             configFile.Save();
