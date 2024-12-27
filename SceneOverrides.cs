@@ -132,8 +132,7 @@ namespace Chameleon
                         forceStormy = true;
                 }
             }
-            else if ((StartOfRound.Instance.currentLevel.name == "MarchLevel"
-                   || StartOfRound.Instance.currentLevel.name == "ReMarchLevel") // Rebalanced Moons - dopadream
+            else if ((StartOfRound.Instance.currentLevel.name == "MarchLevel")
                    && Configuration.rainyMarch.Value && StartOfRound.Instance.currentLevel.currentWeather != LevelWeatherType.Stormy && StartOfRound.Instance.currentLevel.currentWeather != LevelWeatherType.Flooded)
             {
                 float rainChance = 0.76f;
@@ -176,7 +175,7 @@ namespace Chameleon
                 }
             }
 
-            LevelCosmeticInfo currentLevelCosmeticInfo = GetLevelCosmeticInfo(StartOfRound.Instance.currentLevel.name);
+            VanillaLevelsInfo.predefinedLevels.TryGetValue(StartOfRound.Instance.currentLevel.name, out LevelCosmeticInfo currentLevelCosmeticInfo);
 
             string interior = RoundManager.Instance?.dungeonGenerator?.Generator?.DungeonFlow?.name;
             if (Configuration.fancyEntranceDoors.Value && currentLevelCosmeticInfo != null)
@@ -230,30 +229,6 @@ namespace Chameleon
                         Plugin.Logger.LogDebug("No custom cave weights were defined for the current moon. Falling back to vanilla caverns");
                 }
             }
-        }
-
-        static LevelCosmeticInfo GetLevelCosmeticInfo(string levelName)
-        {
-            VanillaLevelsInfo.predefinedLevels.TryGetValue(levelName, out LevelCosmeticInfo info);
-
-            if (info == null)
-            {
-                switch (levelName)
-                {
-                    case "ReMarchSelectable":
-                        return VanillaLevelsInfo.predefinedLevels["MarchLevel"];
-                    case "ReOffenseLevel":
-                        return VanillaLevelsInfo.predefinedLevels["OffenseLevel"];
-                    case "ReAdamanceLevel":
-                        return VanillaLevelsInfo.predefinedLevels["AdamanceLevel"];
-                    /*case "ReDineLevel":
-                        return VanillaLevelsInfo.predefinedLevels["DineLevel"];*/
-                    case "ReTitanLevel":
-                        return VanillaLevelsInfo.predefinedLevels["TitanLevel"];
-                }
-            }
-
-            return info;
         }
 
         static void SetUpFancyEntranceDoors(LevelCosmeticInfo levelCosmeticInfo, string interior)
@@ -744,9 +719,9 @@ namespace Chameleon
                 if (volume.name == "Sky and Fog Global Volume")
                 {
                     string profile = null;
-                    if (Configuration.fixTitanVolume.Value && StartOfRound.Instance.currentLevel.name == "TitanLevel")
+                    if (Configuration.fixTitanVolume.Value && StartOfRound.Instance.currentLevel.sceneName == "Level8Artifice")
                         profile = "SnowyFog";
-                    else if (Configuration.fixArtificeVolume.Value && StartOfRound.Instance.currentLevel.name == "ArtificeLevel" && !IsSnowLevel())
+                    else if (Configuration.fixArtificeVolume.Value && StartOfRound.Instance.currentLevel.sceneName == "Level9Artifice" && !IsSnowLevel())
                         profile = "Sky and Fog Settings Profile";
 
                     if (!string.IsNullOrEmpty(profile))
