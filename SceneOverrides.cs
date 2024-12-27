@@ -754,7 +754,7 @@ namespace Chameleon
                         try
                         {
                             AssetBundle volumetricProfiles = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "volumetricprofiles"));
-                            volume.profile = volumetricProfiles.LoadAsset<VolumeProfile>(profile) ?? volume.profile;
+                            volume.sharedProfile = volumetricProfiles.LoadAsset<VolumeProfile>(profile) ?? volume.profile;
                             Plugin.Logger.LogDebug($"Changed profile on \"{volume.name}\"");
                             volumetricProfiles.Unload(false);
                         }
@@ -803,6 +803,9 @@ namespace Chameleon
 
         internal static bool IsCameraInside()
         {
+            if (GameNetworkManager.Instance.localPlayerController == null)
+                return false;
+
             if (!GameNetworkManager.Instance.localPlayerController.isPlayerDead)
                 return GameNetworkManager.Instance.localPlayerController.isInsideFactory;
 

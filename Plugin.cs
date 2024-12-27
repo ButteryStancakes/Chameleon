@@ -14,7 +14,7 @@ namespace Chameleon
     [BepInDependency(GUID_ARTIFICE_BLIZZARD, BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
-        const string PLUGIN_GUID = "butterystancakes.lethalcompany.chameleon", PLUGIN_NAME = "Chameleon", PLUGIN_VERSION = "1.4.1";
+        const string PLUGIN_GUID = "butterystancakes.lethalcompany.chameleon", PLUGIN_NAME = "Chameleon", PLUGIN_VERSION = "1.4.2";
         internal static new ManualLogSource Logger;
 
         const string GUID_ARTIFICE_BLIZZARD = "butterystancakes.lethalcompany.artificeblizzard";
@@ -99,7 +99,8 @@ namespace Chameleon
             if (__instance.normalizedTimeOfDay > 0.63f)
                 SceneOverrides.UpdateDoorLightColor(__instance.normalizedTimeOfDay);
 
-            SceneOverrides.UpdateWeatherAmbience();
+            if (__instance.timeHasStarted)
+                SceneOverrides.UpdateWeatherAmbience();
         }
 
         [HarmonyPatch(typeof(TimeOfDay), nameof(TimeOfDay.PlayTimeMusicDelayed))]
