@@ -719,7 +719,7 @@ namespace Chameleon
                 if (volume.name == "Sky and Fog Global Volume")
                 {
                     string profile = null;
-                    if (Configuration.fixTitanVolume.Value && StartOfRound.Instance.currentLevel.sceneName == "Level8Artifice")
+                    if (Configuration.fixTitanVolume.Value && StartOfRound.Instance.currentLevel.sceneName == "Level8Titan")
                         profile = "SnowyFog";
                     else if (Configuration.fixArtificeVolume.Value && StartOfRound.Instance.currentLevel.sceneName == "Level9Artifice" && !IsSnowLevel())
                         profile = "Sky and Fog Settings Profile";
