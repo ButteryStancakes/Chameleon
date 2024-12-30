@@ -152,9 +152,6 @@ namespace Chameleon
             if (Configuration.fixDoorMeshes.Value)
                 FixDoorMaterials();
 
-            if (Configuration.fixDoorSounds.Value)
-                FixDoorSounds();
-
             if (Configuration.weatherAmbience.Value > 0f)
                 SetUpWeatherAmbience();
 
@@ -171,7 +168,6 @@ namespace Chameleon
                 catch
                 {
                     Plugin.Logger.LogError("Encountered some error loading assets from bundle \"lightmats\". Did you install the plugin correctly?");
-                    return;
                 }
             }
 
@@ -692,24 +688,6 @@ namespace Chameleon
         {
             if (lightBehindDoor != null)
                 lightBehindDoor.color = Color.Lerp(doorLightColor, Color.black, Mathf.InverseLerp(0.63f, 0.998f/*0.9f*/, timeOfDay));
-        }
-
-        static void FixDoorSounds()
-        {
-            foreach (AnimatedObjectTrigger animatedObjectTrigger in Object.FindObjectsOfType<AnimatedObjectTrigger>())
-            {
-                if (animatedObjectTrigger.thisAudioSource != null)
-                {
-                    Renderer rend = animatedObjectTrigger.transform.parent?.GetComponent<Renderer>();
-                    if (animatedObjectTrigger.name == "PowerBoxDoor" || animatedObjectTrigger.thisAudioSource.name == "storage door" || (rend != null && rend.sharedMaterials.Length == 7))
-                    {
-                        AudioClip[] temp = (AudioClip[])animatedObjectTrigger.boolFalseAudios.Clone();
-                        animatedObjectTrigger.boolFalseAudios = (AudioClip[])animatedObjectTrigger.boolTrueAudios.Clone();
-                        animatedObjectTrigger.boolTrueAudios = temp;
-                        Plugin.Logger.LogDebug($"Inverted sounds on {animatedObjectTrigger.name}.AnimatedObjectTrigger");
-                    }
-                }
-            }
         }
 
         internal static void ApplyFogSettings()

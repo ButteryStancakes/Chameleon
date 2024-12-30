@@ -30,7 +30,7 @@ namespace Chameleon
 
         static ConfigFile configFile;
 
-        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, snowyGiants, fixDoorMeshes, fancyFoliage, fancyShrouds, fixDoorSounds, fogReprojection, windowVariants, fixTitanVolume, fixArtificeVolume;
+        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, snowyGiants, fixDoorMeshes, fancyFoliage, fancyShrouds, fogReprojection, windowVariants, fixTitanVolume, fixArtificeVolume;
         internal static ConfigEntry<GordionStorms> stormyGordion;
         internal static ConfigEntry<FogQuality> fogQuality;
         internal static ConfigEntry<float> weatherAmbience;
@@ -150,12 +150,6 @@ namespace Chameleon
                 "FixDoorMeshes",
                 true,
                 "Fixes the glass on the steel doors in factories (and some custom interiors) to show on both sides. Also fixes doorknobs looking incorrect on one side.");
-
-            fixDoorSounds = configFile.Bind(
-                "Interior",
-                "FixDoorSounds",
-                true,
-                "Fixes backwards open/close sounds on factory doors, breaker boxes, and storage locker doors.");
 
             weatherAmbience = configFile.Bind(
                 "Interior",
@@ -291,6 +285,9 @@ namespace Chameleon
 
                 configFile.Remove(configFile["Exterior", "FancyShrouds"].Definition);
             }
+
+            configFile.Bind("Interior", "FixDoorSounds", true, "Legacy setting, doesn't work");
+            configFile.Remove(configFile["Interior", "FixDoorSounds"].Definition);
 
             configFile.Save();
         }

@@ -96,11 +96,12 @@ namespace Chameleon
                 stormy.SetActive(true);
             }
 
-            if (__instance.normalizedTimeOfDay > 0.63f)
-                SceneOverrides.UpdateDoorLightColor(__instance.normalizedTimeOfDay);
-
             if (__instance.timeHasStarted)
+            {
                 SceneOverrides.UpdateWeatherAmbience();
+                if (__instance.normalizedTimeOfDay > 0.63f)
+                    SceneOverrides.UpdateDoorLightColor(__instance.normalizedTimeOfDay);
+            }
         }
 
         [HarmonyPatch(typeof(TimeOfDay), nameof(TimeOfDay.PlayTimeMusicDelayed))]
