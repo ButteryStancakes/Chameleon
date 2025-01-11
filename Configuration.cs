@@ -30,7 +30,7 @@ namespace Chameleon
 
         static ConfigFile configFile;
 
-        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, snowyGiants, fixDoorMeshes, fancyFoliage, fancyShrouds, fogReprojection, windowVariants, fixTitanVolume, fixArtificeVolume;
+        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, giantSkins, fixDoorMeshes, fancyFoliage, fancyShrouds, fogReprojection, windowVariants, fixTitanVolume, fixArtificeVolume;
         internal static ConfigEntry<GordionStorms> stormyGordion;
         internal static ConfigEntry<FogQuality> fogQuality;
         internal static ConfigEntry<float> weatherAmbience;
@@ -124,11 +124,11 @@ namespace Chameleon
                 true,
                 "Prevents the morning/afternoon ambience music from playing during Eclipsed weather, which has its own ambient track.");
 
-            snowyGiants = configFile.Bind(
+            giantSkins = configFile.Bind(
                 "Exterior",
-                "SnowyGiants",
+                "GiantSkins",
                 true,
-                "When the surface is snowy, Forest Keepers will blend in a little better with the environment.\nIf you are experiencing issues with giants and have other skin mods installed, you should probably disable this setting.");
+                "When the surface is snowy, Forest Keepers will blend in a little better with the environment. They will also appear more charred after being burnt to death.\nIf you are experiencing issues with giants and have other skin mods installed, you should probably disable this setting.");
         }
 
         static void InteriorConfig()
@@ -284,6 +284,14 @@ namespace Chameleon
                     fancyShrouds.Value = false;
 
                 configFile.Remove(configFile["Exterior", "FancyShrouds"].Definition);
+            }
+
+            if (giantSkins.Value)
+            {
+                if (!configFile.Bind("Exterior", "SnowyGiants", true, "Legacy setting, doesn't work").Value)
+                    giantSkins.Value = false;
+
+                configFile.Remove(configFile["Exterior", "SnowyGiants"].Definition);
             }
 
             configFile.Bind("Interior", "FixDoorSounds", true, "Legacy setting, doesn't work");
