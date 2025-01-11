@@ -1,4 +1,4 @@
-﻿using Chameleon.Overrides;
+﻿using Chameleon.Info;
 using HarmonyLib;
 using System.IO;
 using System.Reflection;
@@ -15,7 +15,7 @@ namespace Chameleon.Patches
         [HarmonyPostfix]
         static void ForestGiantAIPostStart(ForestGiantAI __instance)
         {
-            if (Configuration.snowyGiants.Value && SceneOverrides.IsSnowLevel())
+            if (Configuration.snowyGiants.Value && Queries.IsSnowLevel())
             {
                 if (giantSnowy == null)
                 {
