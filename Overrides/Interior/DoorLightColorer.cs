@@ -11,7 +11,7 @@ namespace Chameleon.Overrides.Interior
 
         internal static void Apply()
         {
-            if (string.IsNullOrEmpty(Common.interior) || Common.interior == "Level2Flow")
+            if (!Configuration.doorLightColors.Value || string.IsNullOrEmpty(Common.interior) || Common.interior == "Level2Flow")
                 return;
 
             lightBehindDoor = Object.FindObjectsOfType<SpriteRenderer>().FirstOrDefault(spriteRenderer => spriteRenderer.name == "LightBehindDoor");

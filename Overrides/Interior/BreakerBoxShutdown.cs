@@ -35,6 +35,9 @@ namespace Chameleon.Overrides.Interior
             done = true;
             SceneOverrides.resetOverrides += Reset;
 
+            if (!Configuration.powerOffBreakerBox.Value)
+                return;
+
             if (lightOff != null)
             {
                 BreakerBox breakerBox = Object.FindObjectOfType<BreakerBox>();

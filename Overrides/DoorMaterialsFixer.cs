@@ -11,7 +11,7 @@ namespace Chameleon.Overrides
 
         internal static void Apply()
         {
-            if (StartOfRound.Instance.currentLevel.name == "CompanyBuildingLevel")
+            if (!Configuration.fixDoorMeshes.Value || StartOfRound.Instance.currentLevel.name == "CompanyBuildingLevel")
                 return;
 
             if (helmetGlass == null || material001 == null)

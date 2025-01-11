@@ -29,6 +29,7 @@ namespace Chameleon.Overrides
             applyOverrides += WeatherAmbience.Apply;
 
             applyOverrides += RockRecolorer.Apply;
+            applyOverrides += DoorLightColorer.Apply;
             applyOverrides += RetextureCaverns.Apply;
             applyOverrides += ManorWindows.Apply;
             applyOverrides += BreakerBoxShutdown.Apply;
@@ -45,19 +46,19 @@ namespace Chameleon.Overrides
             Common.GetReferences();
             Common.GetSharedAssets();
 
-            applyOverrides.Invoke();
+            applyOverrides?.Invoke();
         }
 
         internal static void UnloadScene(Scene scene)
         {
             done = false;
 
-            resetOverrides.Invoke();
+            resetOverrides?.Invoke();
         }
 
         internal static void Refresh()
         {
-            refreshOverrides.Invoke();
+            refreshOverrides?.Invoke();
         }
 
         internal static void LoadNewScene(Scene scene, LoadSceneMode mode)

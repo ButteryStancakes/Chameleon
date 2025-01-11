@@ -13,7 +13,7 @@ namespace Chameleon.Overrides.Interior
 
         internal static void Apply()
         {
-            if (string.IsNullOrEmpty(Common.interior) || Common.interior != "Level2Flow")
+            if ((!Configuration.powerOffWindows.Value && !Configuration.windowVariants.Value) || string.IsNullOrEmpty(Common.interior) || Common.interior != "Level2Flow")
                 return;
 
             string windowMatName = Queries.IsSnowLevel() ? "FakeWindowView3" : Common.currentLevelCosmeticInfo?.windowMatName;
