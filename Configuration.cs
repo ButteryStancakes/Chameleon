@@ -220,14 +220,19 @@ namespace Chameleon
                     int weight = -1;
                     if (moonAndWeight.Length == 2 && int.TryParse(moonAndWeight[1], out weight))
                     {
-                        MoonCavernMapping mapping = new()
+                        if (weight != 0)
                         {
-                            moon = moonAndWeight[0].ToLower(),
-                            type = type,
-                            weight = (int)Mathf.Clamp(weight, 0f, 99999f)
-                        };
-                        mappings.Add(mapping);
-                        Plugin.Logger.LogDebug($"Successfully added \"{mapping.moon}\" to \"{mapping.type}\" caves list with weight {mapping.weight}");
+                            MoonCavernMapping mapping = new()
+                            {
+                                moon = moonAndWeight[0].ToLower(),
+                                type = type,
+                                weight = (int)Mathf.Clamp(weight, 1f, 99999f)
+                            };
+                            mappings.Add(mapping);
+                            Plugin.Logger.LogDebug($"Successfully added \"{mapping.moon}\" to \"{mapping.type}\" caves list with weight {mapping.weight}");
+                        }
+                        else
+                            Plugin.Logger.LogDebug($"Skipping \"{weightedMoon}\" in \"{listName}\" because weight is 0");
                     }
                     else
                         Plugin.Logger.LogWarning($"Encountered an error parsing entry \"{weightedMoon}\" in the \"{listName}\" setting. It has been skipped");
