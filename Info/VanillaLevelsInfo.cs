@@ -92,14 +92,14 @@ namespace Chameleon.Info
             { CavernType.Ice, new(){
                 tag = "Snow",
                 waterColor = true,
-                waterColor1 = new Color(0f, 0.18982977f, 0.20754719f, 0.972549f),
-                waterColor2 = new Color(0.12259702f, 0.1792453f, 0.16491137f, 0.9882353f)
+                waterColorShallow = new Color(0f, 0.18982977f, 0.20754719f, 0.972549f),
+                waterColorDeep = new Color(0.12259702f, 0.1792453f, 0.16491137f, 0.9882353f)
             }},
             { CavernType.Amethyst, new(){
                 noDrips = true,
                 waterColor = true,
-                waterColor1 = new Color(0.25098039215f, 0.26274509803f, 0.27843137254f, 0.972549f),
-                waterColor2 = new Color(0.16470588235f, 0.14901960784f, 0.1725490196f, 0.9882353f)
+                waterColorShallow = new Color(0.25098039215f, 0.26274509803f, 0.27843137254f, 0.972549f),
+                waterColorDeep = new Color(0.16470588235f, 0.14901960784f, 0.1725490196f, 0.9882353f)
             }},
             { CavernType.Desert, new() },
             { CavernType.Mesa, new(){
@@ -108,8 +108,8 @@ namespace Chameleon.Info
             { CavernType.Gravel, new(){
                 tag = "Gravel",
                 waterColor = true,
-                waterColor1 = new Color(0.2f, 0.2f, 0.2f, 0.972549f),
-                waterColor2 = new Color(0.15f, 0.15f, 0.15f, 0.9882353f)
+                waterColorShallow = new Color(0.2f, 0.2f, 0.2f, 0.972549f),
+                waterColorDeep = new Color(0.15f, 0.15f, 0.15f, 0.9882353f)
             }}
         };
     }

@@ -31,7 +31,7 @@ namespace Chameleon.Overrides.Exterior
 
         static void Refresh()
         {
-            if (/*enabled &&*/ Queries.IsCameraInside())
+            if (/*enabled &&*/ !Queries.IsCameraInside())
                 TimeOfDay.Instance.effects[(int)LevelWeatherType.Rainy].effectEnabled = true;
         }
 

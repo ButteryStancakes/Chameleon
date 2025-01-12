@@ -52,7 +52,7 @@ namespace Chameleon.Patches
         [HarmonyPostfix]
         static void PostSwitchToBehaviourStateOnLocalClient(EnemyAI __instance, int stateIndex)
         {
-            if (__instance is ForestGiantAI && Configuration.giantSkins.Value && Queries.IsSnowLevel() && giantBurnt != null)
+            if (__instance is ForestGiantAI && Configuration.giantSkins.Value && Queries.IsSnowLevel() && giantNormal != null)
             {
                 foreach (SkinnedMeshRenderer rend in __instance.GetComponentsInChildren<SkinnedMeshRenderer>())
                     rend.material.mainTexture = giantNormal;
@@ -65,7 +65,7 @@ namespace Chameleon.Patches
         [HarmonyPostfix]
         static void ForestGiantAIPostKillEnemy(ForestGiantAI __instance, float ___timeAtStartOfBurning)
         {
-            if (___timeAtStartOfBurning > 0f)
+            if (Configuration.giantSkins.Value && giantBurnt != null && ___timeAtStartOfBurning > 0f)
             {
                 foreach (SkinnedMeshRenderer rend in __instance.GetComponentsInChildren<SkinnedMeshRenderer>())
                     rend.material.mainTexture = giantBurnt;

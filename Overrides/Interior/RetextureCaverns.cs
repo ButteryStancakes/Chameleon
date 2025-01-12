@@ -72,8 +72,8 @@ namespace Chameleon.Overrides.Interior
                     }
                     else if (currentCavernInfo.waterColor && rend.name == "Water (1)" && rend.sharedMaterial.name.StartsWith("CaveWater"))
                     {
-                        rend.material.SetColor("Color_6a9a916e2c84442984edc20c082efe79", currentCavernInfo.waterColor1);
-                        rend.sharedMaterial.SetColor("Color_c9a840f2115c4802ba54d713194f761d", currentCavernInfo.waterColor2);
+                        rend.material.SetColor("Color_6a9a916e2c84442984edc20c082efe79", currentCavernInfo.waterColorShallow);
+                        rend.sharedMaterial.SetColor("Color_c9a840f2115c4802ba54d713194f761d", currentCavernInfo.waterColorDeep);
                     }
                     else if (coalMat != null && rend.sharedMaterial.name.StartsWith(coalMat.name))
                         rend.material = coalMat;
