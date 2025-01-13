@@ -29,6 +29,7 @@ namespace Chameleon.Overrides.Exterior
                 {
                     if (mapProp.name.StartsWith("LargeRock"))
                     {
+                        bool alt = rand.NextDouble() > 0.5f;
                         foreach (Renderer rend in mapProp.GetComponentsInChildren<Renderer>())
                         {
                             if (snowy)
@@ -38,7 +39,7 @@ namespace Chameleon.Overrides.Exterior
                             }
                             else if (gray)
                             {
-                                if (amethyst != null && rand.NextDouble() > 0.5f)
+                                if (amethyst != null && alt)
                                     rend.sharedMaterial = amethyst;
                                 else
                                 {
