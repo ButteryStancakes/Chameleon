@@ -27,7 +27,8 @@ namespace Chameleon.Info
                 fancyDoorPos = new(-29.2789993f, -1.176f, 151.069f),
                 fancyDoorRot = Quaternion.Euler(-90f, 90f, 0f),
                 planeOffset = new(0.075f, -1f, 0f),
-                //doorLightColor = DoorLightPalette.WITCHES_BACKGROUND
+                //doorLightColor = DoorLightPalette.WITCHES_BACKGROUND,
+                grayRocks = true
             }},
             { "OffenseLevel", new(){
                 fancyDoorPos = new(128.936005f, 16.3500004f, -53.7130013f),
@@ -39,7 +40,8 @@ namespace Chameleon.Info
                 fancyDoorPos = new(-158.179993f, -3.95300007f, 21.7080002f),
                 fancyDoorRot = Quaternion.Euler(-90f, 0f, 0f),
                 planeOffset = new(-0.075f, -1f, 0f),
-                //doorLightColor = DoorLightPalette.WITCHES_BACKGROUND
+                //doorLightColor = DoorLightPalette.WITCHES_BACKGROUND,
+                grayRocks = true
             }},
             { "AdamanceLevel", new(){
                 fakeDoor1Path = "/Environment/Teleports/EntranceTeleportA/SteelDoorFake",
@@ -49,14 +51,16 @@ namespace Chameleon.Info
                 fancyDoorPos = new(-122.031998f, 1.84300005f, -3.6170001f),
                 fancyDoorRot = Quaternion.Euler(-90f, 0f, 0f),
                 planeOffset = new(-0.00336369989f, -0.0699860007f, -1.02460158f),
-                doorLightColor = DoorLightPalette.WITCHES_BACKGROUND
+                doorLightColor = DoorLightPalette.WITCHES_BACKGROUND,
+                grayRocks = true
             }},
             { "EmbrionLevel", new(){
                 fancyDoorPos = new(-195.470001f, 6.35699987f, -7.82999992f),
                 fancyDoorRot = Quaternion.Euler(-90f, 0f, 39.517f),
                 planeOffset = new(-0.045f, -1f, -0.05513f),
                 doorLightColor = DoorLightPalette.AMETHYST_BACKGROUND,
-                windowMatName = "FakeWindowView4"
+                windowMatName = "FakeWindowView4",
+                grayRocks = true
             }},
             { "RendLevel", new(){
                 fancyDoorPos = new(50.5449982f, -16.8225021f, -152.716583f),
@@ -83,7 +87,8 @@ namespace Chameleon.Info
                 framePath = "/Environment/MainFactory/DoorFrame (1)",
                 planePath = "/Environment/MainFactory/Plane",
                 fancyDoorPos = new(52.3199997f, -0.665000021f, -156.145996f),
-                fancyDoorRot = Quaternion.Euler(-90f, -90f, 0f)
+                fancyDoorRot = Quaternion.Euler(-90f, -90f, 0f),
+                grayRocks = true
             }}
         };
 

@@ -13,12 +13,12 @@ namespace Chameleon.Overrides.Exterior
                 return;
 
             bool snowy = Queries.IsSnowLevel();
-            bool embrion = StartOfRound.Instance.currentLevel.name == "EmbrionLevel";
+            bool gray = !snowy && Common.currentLevelCosmeticInfo != null && Common.currentLevelCosmeticInfo.grayRocks;
 
-            if (!snowy && !embrion)
+            if (!snowy && !gray)
                 return;
 
-            Material amethyst = embrion ? GameObject.Find("/Environment/LargeRock3/rock.012 (2)")?.GetComponent<Renderer>()?.sharedMaterial : null;
+            Material amethyst = StartOfRound.Instance.currentLevel.name == "EmbrionLevel" ? GameObject.Find("/Environment/LargeRock3/rock.012 (2)")?.GetComponent<Renderer>()?.sharedMaterial : null;
             System.Random rand = new(StartOfRound.Instance.randomMapSeed);
 
             if (RoundManager.Instance.mapPropsContainer == null)
@@ -36,7 +36,7 @@ namespace Chameleon.Overrides.Exterior
                                 rend.material.SetTexture("_MainTex", null);
                                 rend.sharedMaterial.SetTexture("_BaseColorMap", null);
                             }
-                            else if (embrion)
+                            else if (gray)
                             {
                                 if (amethyst != null && rand.NextDouble() > 0.5f)
                                     rend.sharedMaterial = amethyst;

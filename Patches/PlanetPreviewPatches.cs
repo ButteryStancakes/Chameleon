@@ -1,5 +1,10 @@
 ﻿using HarmonyLib;
+using System.IO;
 using System.Linq;
+using System.Reflection;
+
+
+//using System.Linq;
 using UnityEngine;
 
 namespace Chameleon.Patches
@@ -9,6 +14,7 @@ namespace Chameleon.Patches
     {
         static Animator shipAnimator;
         static Light sunlight;
+        static Material artificeMat, embrionMat;
 
         [HarmonyPatch(typeof(StartOfRound), "Awake")]
         [HarmonyPostfix]
@@ -26,12 +32,27 @@ namespace Chameleon.Patches
                 }
 
                 // artifice is snowy by default
-                if (!Common.INSTALLED_ARTIFICE_BLIZZARD)
+                /*if (!Common.INSTALLED_ARTIFICE_BLIZZARD)
                 {
                     GameObject moon2 = __instance.levels.FirstOrDefault(level => level.planetPrefab != null && level.planetPrefab.name.StartsWith("Moon2")).planetPrefab;
                     SelectableLevel artifice = __instance.levels.FirstOrDefault(level => level.name == "ArtificeLevel");
                     if (moon2 != null && artifice != null)
                         artifice.planetPrefab = moon2;
+                }*/
+
+                if (artificeMat == null || embrionMat == null)
+                {
+                    try
+                    {
+                        AssetBundle planetPreview = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "planetpreview"));
+                        artificeMat = planetPreview.LoadAsset<Material>("ArtificePlanet");
+                        embrionMat = planetPreview.LoadAsset<Material>("EmbrionPlanet");
+                        planetPreview.Unload(false);
+                    }
+                    catch
+                    {
+                        Plugin.Logger.LogError("Encountered some error loading assets from bundle \"planetpreview\". Did you install the plugin correctly?");
+                    }
                 }
             }
         }
@@ -56,13 +77,33 @@ namespace Chameleon.Patches
         [HarmonyPostfix]
         static void PostChangePlanet(StartOfRound __instance)
         {
-            // don't show company in orbit
-            if (sunlight != null && __instance.currentLevel.name == "CompanyBuildingLevel" && __instance.currentPlanetPrefab != null)
+            if (sunlight != null && __instance.currentPlanetPrefab != null)
             {
-                foreach (Renderer rend in __instance.currentPlanetPrefab.GetComponentsInChildren<Renderer>())
+                switch (__instance.currentLevel.name)
                 {
-                    rend.enabled = false;
-                    rend.forceRenderingOff = true;
+                    case "ArtificeLevel":
+                        if (artificeMat != null && (!Common.INSTALLED_ARTIFICE_BLIZZARD || !Configuration.autoAdaptSnow.Value))
+                        {
+                            foreach (Renderer rend in __instance.currentPlanetPrefab.GetComponentsInChildren<Renderer>())
+                                rend.material = artificeMat;
+                        }
+                        break;
+                    case "EmbrionLevel":
+                        if (embrionMat != null)
+                        {
+                            Renderer moon = __instance.currentPlanetPrefab.GetComponentsInChildren<Renderer>().FirstOrDefault(rend => rend.name == "Moon");
+                            if (moon != null)
+                                moon.material = embrionMat;
+                        }
+                        break;
+                    // don't show company in orbit
+                    case "CompanyBuildingLevel":
+                        foreach (Renderer rend in __instance.currentPlanetPrefab.GetComponentsInChildren<Renderer>())
+                        {
+                            rend.enabled = false;
+                            rend.forceRenderingOff = true;
+                        }
+                        break;
                 }
             }
         }

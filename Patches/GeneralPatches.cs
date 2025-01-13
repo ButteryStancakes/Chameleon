@@ -16,23 +16,6 @@ namespace Chameleon.Patches
         {
             RetextureCaverns.BuildWeightLists();
         }
-        // DEBUG REMOVE THIS!!!!!!!!!!!!!!!!!!!!!
-        [HarmonyPatch(typeof(StartOfRound), "Awake")]
-        [HarmonyPostfix]
-        static void StartOfRoundPostAwake(StartOfRound __instance)
-        {
-            foreach (SelectableLevel level in __instance.levels)
-            {
-                for (int i = 0; i < level.spawnableOutsideObjects.Length; i++)
-                {
-                    if (level.spawnableOutsideObjects[i].spawnableObject.name.StartsWith("LargeRock"))
-                    {
-                        float amount = level.spawnableOutsideObjects[i].randomAmount.Evaluate(1f);
-                        level.spawnableOutsideObjects[i].randomAmount = AnimationCurve.Linear(0f, amount, 1f, amount + 12f);
-                    }
-                }
-            }
-        }
 
         [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.FinishGeneratingNewLevelClientRpc))]
         [HarmonyPostfix]

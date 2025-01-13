@@ -12,9 +12,12 @@ namespace Chameleon.Info
         internal Vector3 planeOffset = new(0f, -1f, 0f);
 
         // DoorLightColors
-        internal Color doorLightColor = new(0.490566f, 0.4165709f, 0.3355286f);
+        internal Color doorLightColor = DoorLightPalette.DEFAULT_BACKGROUND;
 
         // WindowVariants
         internal string windowMatName = null;
+
+        // RecolorRandomRocks
+        internal bool grayRocks;
     }
 }
