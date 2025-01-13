@@ -88,7 +88,7 @@ namespace Chameleon
             fixArtificeVolume = configFile.Bind(
                 "Rendering",
                 "FixArtificeVolume",
-                false,
+                true,
                 "\"Fixes\" Artifice's global volume, which has the exact opposite issue of Titan. This is more of a subjective change, but makes Artifice look more vibrant.");
         }
 
@@ -180,12 +180,12 @@ namespace Chameleon
 
         static void InteriorMineshaftConfig()
         {
-            PopulateGlobalListWithCavernType(CavernType.Vanilla, "Vow:100,March:100,Adamance:100,Artifice:80");
+            PopulateGlobalListWithCavernType(CavernType.Vanilla, "Vow:100,March:100,Adamance:100,Artifice:87");
             PopulateGlobalListWithCavernType(CavernType.Mesa, "Experimentation:100,Titan:100");
             PopulateGlobalListWithCavernType(CavernType.Desert, "Assurance:100,Offense:100");
             PopulateGlobalListWithCavernType(CavernType.Ice, "Rend:100,Dine:100");
             PopulateGlobalListWithCavernType(CavernType.Amethyst, "Embrion:100");
-            PopulateGlobalListWithCavernType(CavernType.Gravel, "Artifice:20");
+            PopulateGlobalListWithCavernType(CavernType.Gravel, "Artifice:13");
 
             autoAdaptSnow = configFile.Bind(
                 "Interior.Mineshaft",
