@@ -26,7 +26,8 @@ namespace Chameleon
         {
             interior = StartOfRound.Instance.currentLevel.name != "CompanyBuildingLevel" ? RoundManager.Instance?.dungeonGenerator?.Generator?.DungeonFlow?.name : string.Empty;
 
-            VanillaLevelsInfo.predefinedLevels.TryGetValue(StartOfRound.Instance.currentLevel.name, out currentLevelCosmeticInfo);
+            if (!VanillaLevelsInfo.predefinedLevels.TryGetValue(StartOfRound.Instance.currentLevel.name, out currentLevelCosmeticInfo))
+                currentLevelCosmeticInfo = null;
 
             if (StartOfRound.Instance.currentLevel.name == "ArtificeLevel" && INSTALLED_ARTIFICE_BLIZZARD)
             {

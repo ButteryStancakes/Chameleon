@@ -8,7 +8,7 @@ namespace Chameleon.Overrides
     {
         internal static void Apply()
         {
-            if (!Configuration.fancyEntranceDoors.Value || StartOfRound.Instance.currentLevel.name == "CompanyBuildingLevel")
+            if (!Configuration.fancyEntranceDoors.Value || StartOfRound.Instance.currentLevel.name == "CompanyBuildingLevel" || Common.currentLevelCosmeticInfo == null)
                 return;
 
             if (!string.IsNullOrEmpty(Common.currentLevelCosmeticInfo.planePath))

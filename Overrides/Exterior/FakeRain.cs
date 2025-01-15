@@ -13,9 +13,11 @@ namespace Chameleon.Overrides.Exterior
 
             /*if (StartOfRound.Instance.currentLevel.currentWeather != LevelWeatherType.Stormy && StartOfRound.Instance.currentLevel.currentWeather != LevelWeatherType.Flooded)
             {
-                float rainChance = 0.76f;
-                if (StartOfRound.Instance.currentLevel.currentWeather == LevelWeatherType.Foggy)
-                    rainChance *= 0.45f;
+                float rainChance = 0.83f;
+                if (StartOfRound.Instance.currentLevel.currentWeather == LevelWeatherType.Eclipsed)
+                    rainChance *= 0.8f;
+                else if (StartOfRound.Instance.currentLevel.currentWeather == LevelWeatherType.Foggy)
+                    rainChance *= 0.4f;
 
                 if (new System.Random(StartOfRound.Instance.randomMapSeed).NextDouble() <= rainChance)
                     enabled = true;

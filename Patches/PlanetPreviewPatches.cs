@@ -91,9 +91,11 @@ namespace Chameleon.Patches
                     case "EmbrionLevel":
                         if (embrionMat != null)
                         {
-                            Renderer moon = __instance.currentPlanetPrefab.GetComponentsInChildren<Renderer>().FirstOrDefault(rend => rend.name == "Moon");
+                            /*Renderer moon = __instance.currentPlanetPrefab.GetComponentsInChildren<Renderer>().FirstOrDefault(rend => rend.name == "Moon");
                             if (moon != null)
-                                moon.material = embrionMat;
+                                moon.material = embrionMat;*/
+                            foreach (Renderer rend in __instance.currentPlanetPrefab.GetComponentsInChildren<Renderer>())
+                                rend.material = embrionMat;
                         }
                         break;
                     // don't show company in orbit
