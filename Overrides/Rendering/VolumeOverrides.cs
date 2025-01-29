@@ -11,7 +11,7 @@ namespace Chameleon.Overrides.Rendering
     {
         internal static void Apply()
         {
-            foreach (Volume volume in Object.FindObjectsOfType<Volume>())
+            foreach (Volume volume in Object.FindObjectsByType<Volume>(FindObjectsSortMode.None))
             {
                 if (volume.name == "Sky and Fog Global Volume")
                 {
@@ -62,7 +62,7 @@ namespace Chameleon.Overrides.Rendering
 
             if (Configuration.fogReprojection.Value)
             {
-                foreach (HDAdditionalCameraData hdAdditionalCameraData in Object.FindObjectsOfType<HDAdditionalCameraData>())
+                foreach (HDAdditionalCameraData hdAdditionalCameraData in Object.FindObjectsByType<HDAdditionalCameraData>(FindObjectsSortMode.None))
                 {
                     if (!hdAdditionalCameraData.customRenderingSettings)
                         continue;

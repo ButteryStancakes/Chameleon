@@ -30,7 +30,7 @@ namespace Chameleon.Overrides
                 }
             }
 
-            foreach (Renderer doorMesh in Object.FindObjectsOfType<Renderer>().Where(rend => rend.name == "DoorMesh"))
+            foreach (Renderer doorMesh in Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None).Where(rend => rend.name == "DoorMesh"))
             {
                 if (doorMesh.sharedMaterials != null && doorMesh.sharedMaterials.Length == 7 && doorMesh.sharedMaterials[2] != null && doorMesh.sharedMaterials[2].name.StartsWith("Material.001") && doorMesh.sharedMaterials[5] != null && doorMesh.sharedMaterials[5].name.StartsWith("HelmetGlass"))
                 {

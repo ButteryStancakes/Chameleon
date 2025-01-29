@@ -11,13 +11,12 @@ namespace Chameleon.Overrides.Interior
 
         internal static void Apply()
         {
-            if (lightOff == null /*|| fakeWindowOff == null*/)
+            if (lightOff == null)
             {
                 try
                 {
                     AssetBundle lightMats = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "lightmats"));
                     lightOff = lightMats.LoadAsset<Material>("LEDLightYellowOff");
-                    //fakeWindowOff = lightMats.LoadAsset<Material>("FakeWindowViewOff");
                     lightMats.Unload(false);
                 }
                 catch
@@ -40,7 +39,7 @@ namespace Chameleon.Overrides.Interior
 
             if (lightOff != null)
             {
-                BreakerBox breakerBox = Object.FindObjectOfType<BreakerBox>();
+                BreakerBox breakerBox = Common.BreakerBox;
                 if (breakerBox != null)
                 {
                     Transform light = breakerBox.transform.Find("Light");

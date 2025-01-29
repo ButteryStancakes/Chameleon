@@ -21,9 +21,11 @@ namespace Chameleon.Overrides.Exterior
                 float chance = 0.7f;
 
                 int totalScrap = 0;
-                foreach (GrabbableObject item in Object.FindObjectsOfType<GrabbableObject>())
+                foreach (GrabbableObject item in Object.FindObjectsByType<GrabbableObject>(FindObjectsSortMode.None))
+                {
                     if (item.itemProperties.isScrap)
                         totalScrap += item.scrapValue;
+                }
 
                 if (TimeOfDay.Instance.daysUntilDeadline < 1)
                 {
@@ -32,11 +34,11 @@ namespace Chameleon.Overrides.Exterior
                     else if (totalScrap < TimeOfDay.Instance.profitQuota)
                         chance += 0.17f;
                     else if (Mathf.FloorToInt((totalScrap - TimeOfDay.Instance.profitQuota - 75) * 1.2f) + TimeOfDay.Instance.profitQuota >= 1500)
-                        chance = 0.6f;
+                        chance *= 0.9f;
                 }
 
                 if (totalScrap > TimeOfDay.Instance.profitQuota - 75 && !StartOfRound.Instance.levels.Any(level => level.currentWeather != LevelWeatherType.None))
-                    chance *= 0.55f;
+                    chance *= 0.64f;
 
                 if (new System.Random(StartOfRound.Instance.randomMapSeed).NextDouble() <= chance)
                     Enabled = true;

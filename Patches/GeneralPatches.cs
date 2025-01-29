@@ -14,7 +14,7 @@ namespace Chameleon.Patches
         [HarmonyPriority(Priority.Last)]
         static void StartOfRoundPostStart()
         {
-            RetextureCaverns.BuildWeightLists();
+            Common.BuildWeightLists();
         }
 
         [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.FinishGeneratingNewLevelClientRpc))]

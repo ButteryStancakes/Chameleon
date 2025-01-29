@@ -14,7 +14,7 @@ namespace Chameleon.Overrides.Interior
             if (!Configuration.doorLightColors.Value || string.IsNullOrEmpty(Common.interior) || Common.interior == "Level2Flow")
                 return;
 
-            lightBehindDoor = Object.FindObjectsOfType<SpriteRenderer>().FirstOrDefault(spriteRenderer => spriteRenderer.name == "LightBehindDoor");
+            lightBehindDoor = Object.FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None).FirstOrDefault(spriteRenderer => spriteRenderer.name == "LightBehindDoor");
             if (lightBehindDoor != null)
             {
                 if (StartOfRound.Instance.currentLevel.currentWeather == LevelWeatherType.Eclipsed)

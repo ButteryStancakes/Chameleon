@@ -10,7 +10,7 @@ namespace Chameleon.Overrides.Interior
 {
     internal class RetextureCaverns
     {
-        static Dictionary<string, IntWithRarity[]> mineshaftWeightLists = [];
+        internal static Dictionary<string, IntWithRarity[]> cavernWeightLists = [];
 
         internal static void Apply()
         {
@@ -93,45 +93,6 @@ namespace Chameleon.Overrides.Interior
             }
         }
 
-        internal static void BuildWeightLists()
-        {
-            mineshaftWeightLists.Clear();
-
-            Plugin.Logger.LogInfo("List of all indexed moons (Use this to set up your config!):");
-            foreach (SelectableLevel level in StartOfRound.Instance.levels)
-            {
-                if (level.name != "CompanyBuildingLevel")
-                    Plugin.Logger.LogInfo($"\"{level.name}\"");
-            }
-
-            Plugin.Logger.LogDebug("Now assembling final weighted lists");
-            foreach (SelectableLevel level in StartOfRound.Instance.levels)
-            {
-                if (level.name == "CompanyBuildingLevel")
-                    continue;
-
-                try
-                {
-                    List<IntWithRarity> tempWeights = [];
-                    foreach (Configuration.MoonCavernMapping mapping in Configuration.mappings.Where(x => level.name.ToLower().StartsWith(x.moon)))
-                    {
-                        tempWeights.Add(new()
-                        {
-                            id = (int)mapping.type,
-                            rarity = mapping.weight
-                        });
-                        Plugin.Logger.LogDebug($"{level.name} - {mapping.type} @ {mapping.weight}");
-                    }
-                    if (tempWeights.Count > 0)
-                        mineshaftWeightLists.Add(level.name, [.. tempWeights]);
-                }
-                catch
-                {
-                    Plugin.Logger.LogError("Failed to finish assembling weighted lists. If you are encountering this error, it's likely there is a problem with your config - look for warnings further up in your log!");
-                }
-            }
-        }
-
         static CavernType GetCurrentMoonCaverns()
         {
             if (Configuration.autoAdaptSnow.Value && Queries.IsSnowLevel() && (StartOfRound.Instance.currentLevel.name == "ArtificeLevel" || !VanillaLevelsInfo.predefinedLevels.ContainsKey(StartOfRound.Instance.currentLevel.name)))
@@ -140,7 +101,7 @@ namespace Chameleon.Overrides.Interior
                 return CavernType.Ice;
             }
 
-            if (mineshaftWeightLists.TryGetValue(StartOfRound.Instance.currentLevel.name, out IntWithRarity[] mineshaftWeightList))
+            if (cavernWeightLists.TryGetValue(StartOfRound.Instance.currentLevel.name, out IntWithRarity[] mineshaftWeightList))
             {
                 // converts the weighted list into an array of integers, then selects an index based on weight
                 int index = RoundManager.Instance.GetRandomWeightedIndex(mineshaftWeightList.Select(x => x.rarity).ToArray(), new System.Random(StartOfRound.Instance.randomMapSeed));

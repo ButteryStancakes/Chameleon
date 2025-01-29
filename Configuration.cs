@@ -1,6 +1,7 @@
 ﻿using BepInEx.Configuration;
 using Chameleon.Info;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using UnityEngine;
 
 namespace Chameleon
@@ -21,21 +22,20 @@ namespace Chameleon
             High
         }
 
-        internal struct MoonCavernMapping
+        internal struct MoonTypeMapping
         {
             internal string moon;
-            internal CavernType type;
-            internal int weight;
+            internal int type, weight;
         }
 
         static ConfigFile configFile;
 
-        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, giantSkins, fixDoorMeshes, fancyFoliage, fancyShrouds, fogReprojection, windowVariants, fixTitanVolume, fixArtificeVolume;
+        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, giantSkins, fixDoorMeshes, fancyFoliage, fancyShrouds, fogReprojection, fixTitanVolume, fixArtificeVolume;
         internal static ConfigEntry<GordionStorms> stormyGordion;
         internal static ConfigEntry<FogQuality> fogQuality;
         internal static ConfigEntry<float> weatherAmbience;
 
-        internal static List<MoonCavernMapping> mappings = [];
+        internal static List<MoonTypeMapping> cavernMappings = [], windowMappings = [];
 
         internal static void Init(ConfigFile cfg)
         {
@@ -104,7 +104,7 @@ namespace Chameleon
                 "Exterior",
                 "RecolorRandomRocks",
                 true,
-                "Recolors random boulders to be white on snowy moons so they blend in better.");
+                "Recolors the randomly spawning sandstone boulders to blend in better with different types of moons.");
 
             rainyMarch = configFile.Bind(
                 "Exterior",
@@ -154,7 +154,7 @@ namespace Chameleon
             weatherAmbience = configFile.Bind(
                 "Interior",
                 "WeatherAmbience",
-                0.7f,
+                0.5f,
                 new ConfigDescription(
                     "On moons where a blizzard or rainstorm is present, you will be able to hear it faintly while inside the building. Set volume from 0 (silent) to 1 (max).",
                     new AcceptableValueRange<float>(0f, 1f)));
@@ -171,21 +171,84 @@ namespace Chameleon
                 true,
                 "When the breaker box is turned off, the \"fake window\" rooms will also turn off.");
 
-            windowVariants = configFile.Bind(
+            PopulateWindowsList(WindowType.Pasture, "Vow:100,March:100,Adamance:100,Artifice:100");
+            PopulateWindowsList(WindowType.Canyon, "Experimentation:100,Assurance:100,Offense:100,Titan:100");
+            PopulateWindowsList(WindowType.Snowy, "Rend:100,Dine:100");
+            PopulateWindowsList(WindowType.Flowery, "Embrion:100");
+            PopulateWindowsList(WindowType.Beach, string.Empty);
+            PopulateWindowsList(WindowType.HotSprings, string.Empty);
+            PopulateWindowsList(WindowType.BrokenScreen, string.Empty);
+        }
+
+        static void PopulateWindowsList(WindowType type, string defaultList)
+        {
+            string listName = $"{type}WindowsList";
+
+            string customList = configFile.Bind(
                 "Interior.Manor",
-                "WindowVariants",
-                true,
-                "The images displayed on the \"fake windows\" will change depending on the moon's exterior.");
+                listName,
+                defaultList,
+                $"A list of moons for which to assign \"{Regex.Replace(type.ToString(), "([A-Z])", " $1").TrimStart()}\" windows, with their respective weights.{(type != WindowType.Pasture ? " Leave empty to disable." : string.Empty)}\n"
+              + "Moon names are not case-sensitive, and can be left incomplete (ex. \"as\" will map to both Assurance and Asteroid-13.)"
+              + (type == WindowType.Pasture ? "\nUpon hosting a lobby, the full list of moon names will be printed in the debug log, which you can use as a guide." : string.Empty)).Value;
+
+            if (string.IsNullOrEmpty(customList))
+            {
+                Plugin.Logger.LogDebug($"User has no {listName} defined");
+                return;
+            }
+
+            PopulateGlobalListWithType((int)type, customList, ref windowMappings, listName);
+        }
+
+        static void PopulateGlobalListWithType(int type, string customList, ref List<MoonTypeMapping> mappings, string listName)
+        {
+            if (string.IsNullOrEmpty(customList))
+            {
+                Plugin.Logger.LogDebug($"User has no {listName} defined");
+                return;
+            }
+
+            try
+            {
+                foreach (string weightedMoon in customList.Split(','))
+                {
+                    string[] moonAndWeight = weightedMoon.Split(':');
+                    int weight = -1;
+                    if (moonAndWeight.Length == 2 && int.TryParse(moonAndWeight[1], out weight))
+                    {
+                        if (weight != 0)
+                        {
+                            MoonTypeMapping mapping = new()
+                            {
+                                moon = moonAndWeight[0].ToLower(),
+                                type = type,
+                                weight = (int)Mathf.Clamp(weight, 1f, 99999f)
+                            };
+                            mappings.Add(mapping);
+                            Plugin.Logger.LogDebug($"Successfully added \"{mapping.moon}\" to \"{mapping.type}\" list with weight {mapping.weight}");
+                        }
+                        else
+                            Plugin.Logger.LogDebug($"Skipping \"{weightedMoon}\" in \"{listName}\" because weight is 0");
+                    }
+                    else
+                        Plugin.Logger.LogWarning($"Encountered an error parsing entry \"{weightedMoon}\" in the \"{listName}\" setting. It has been skipped");
+                }
+            }
+            catch
+            {
+                Plugin.Logger.LogError($"Encountered an error parsing the \"{listName}\" setting. Please double check that your config follows proper syntax, then restart your game.");
+            }
         }
 
         static void InteriorMineshaftConfig()
         {
-            PopulateGlobalListWithCavernType(CavernType.Vanilla, "Vow:100,March:100,Adamance:100,Artifice:87");
-            PopulateGlobalListWithCavernType(CavernType.Mesa, "Experimentation:100,Titan:100");
-            PopulateGlobalListWithCavernType(CavernType.Desert, "Assurance:100,Offense:100");
-            PopulateGlobalListWithCavernType(CavernType.Ice, "Rend:100,Dine:100");
-            PopulateGlobalListWithCavernType(CavernType.Amethyst, "Embrion:100");
-            PopulateGlobalListWithCavernType(CavernType.Gravel, "Artifice:13");
+            PopulateCavernsList(CavernType.Vanilla, "Vow:100,March:100,Adamance:100,Artifice:87");
+            PopulateCavernsList(CavernType.Mesa, "Experimentation:100,Titan:100");
+            PopulateCavernsList(CavernType.Desert, "Assurance:100,Offense:100");
+            PopulateCavernsList(CavernType.Ice, "Rend:100,Dine:100");
+            PopulateCavernsList(CavernType.Amethyst, "Embrion:100");
+            PopulateCavernsList(CavernType.Gravel, "Artifice:13");
 
             autoAdaptSnow = configFile.Bind(
                 "Interior.Mineshaft",
@@ -194,7 +257,7 @@ namespace Chameleon
                 "Automatically enable ice caverns on modded levels that are snowy.\nIf you have Artifice Blizzard installed, this will also change the caverns to ice specifically when the blizzard is active.");
         }
 
-        static void PopulateGlobalListWithCavernType(CavernType type, string defaultList)
+        static void PopulateCavernsList(CavernType type, string defaultList)
         {
             string listName = $"{type}CavesList";
             
@@ -212,36 +275,7 @@ namespace Chameleon
                 return;
             }
 
-            try
-            {
-                foreach (string weightedMoon in customList.Split(','))
-                {
-                    string[] moonAndWeight = weightedMoon.Split(':');
-                    int weight = -1;
-                    if (moonAndWeight.Length == 2 && int.TryParse(moonAndWeight[1], out weight))
-                    {
-                        if (weight != 0)
-                        {
-                            MoonCavernMapping mapping = new()
-                            {
-                                moon = moonAndWeight[0].ToLower(),
-                                type = type,
-                                weight = (int)Mathf.Clamp(weight, 1f, 99999f)
-                            };
-                            mappings.Add(mapping);
-                            Plugin.Logger.LogDebug($"Successfully added \"{mapping.moon}\" to \"{mapping.type}\" caves list with weight {mapping.weight}");
-                        }
-                        else
-                            Plugin.Logger.LogDebug($"Skipping \"{weightedMoon}\" in \"{listName}\" because weight is 0");
-                    }
-                    else
-                        Plugin.Logger.LogWarning($"Encountered an error parsing entry \"{weightedMoon}\" in the \"{listName}\" setting. It has been skipped");
-                }
-            }
-            catch //(System.Exception e)
-            {
-                Plugin.Logger.LogError($"Encountered an error parsing the \"{listName}\" setting. Please double check that your config follows proper syntax, then restart your game.");
-            }
+            PopulateGlobalListWithType((int)type, customList, ref cavernMappings, listName);
         }
 
         static void MigrateLegacyConfigs()

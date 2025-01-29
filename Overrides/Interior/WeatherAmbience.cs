@@ -48,10 +48,12 @@ namespace Chameleon.Overrides.Interior
                     bool blizzard = Queries.IsSnowLevel();
                     float volume = Configuration.weatherAmbience.Value;
 
-                    if (blizzard && rainInside.clip != null)
+                    if (blizzard && (rainInside.clip != null || Common.interior != "Level3Flow"))
                         volume *= 0.85f;
 
-                    if (Common.interior != "Level3Flow" && rainInside.clip != backgroundFlood)
+                    if (Common.interior == "Level3Flow" && rainInside.clip != backgroundFlood)
+                        volume *= 0.7f;
+                    else
                         volume *= 0.84f;
 
                     if (blizzard)
@@ -106,7 +108,7 @@ namespace Chameleon.Overrides.Interior
 
                 if (rainInside == null)
                 {
-                    rainInside = new GameObject("Chameleon_StormInside").AddComponent<AudioSource>();
+                    rainInside = new GameObject("Chameleon_RainInside").AddComponent<AudioSource>();
                     Object.DontDestroyOnLoad(rainInside.gameObject);
                 }
 

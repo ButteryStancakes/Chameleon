@@ -14,9 +14,6 @@ namespace Chameleon.Info
         // DoorLightColors
         internal Color doorLightColor = DoorLightPalette.DEFAULT_BACKGROUND;
 
-        // WindowVariants
-        internal string windowMatName = null;
-
         // RecolorRandomRocks
         internal bool grayRocks;
     }
