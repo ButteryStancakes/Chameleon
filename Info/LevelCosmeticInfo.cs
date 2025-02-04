@@ -16,5 +16,8 @@ namespace Chameleon.Info
 
         // RecolorRandomRocks
         internal bool grayRocks;
+
+        // UNUSED, this is just provided for Rebalanced Moons compatibility
+        internal string windowMatName;
     }
 }

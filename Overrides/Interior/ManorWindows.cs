@@ -112,7 +112,7 @@ namespace Chameleon.Overrides.Interior
             foreach ((Renderer rend, Light light) in windowTiles)
             {
                 Material[] mats = rend.sharedMaterials;
-                mats[5] = powered ? fakeWindowOn : (fakeWindowOff ?? Common.black);
+                mats[5] = powered ? fakeWindowOn : (fakeWindowOff != null && !Configuration.blackoutWindows.Value) ? fakeWindowOff : Common.black;
                 rend.sharedMaterials = mats;
                 light.enabled = powered;
             }
@@ -133,13 +133,13 @@ namespace Chameleon.Overrides.Interior
                             return (WindowType)typeID;
                     }
                     else
-                        Plugin.Logger.LogWarning("Tried to assign an unknown window type. This shouldn't happen! (Falling back to vanilla windows)");
+                        Plugin.Logger.LogWarning("Tried to assign an unknown window type. This shouldn't happen! (Falling back to pasture windows)");
                 }
                 else
-                    Plugin.Logger.LogWarning("An error occurred indexing a random window type. This shouldn't happen! (Falling back to vanilla windows)");
+                    Plugin.Logger.LogWarning("An error occurred indexing a random window type. This shouldn't happen! (Falling back to pasture windows)");
             }
             else
-                Plugin.Logger.LogDebug("No custom window weights were defined for the current moon. Falling back to vanilla windows");
+                Plugin.Logger.LogDebug("No custom window weights were defined for the current moon. Falling back to pasture windows");
 
             return WindowType.Pasture;
         }

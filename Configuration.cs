@@ -30,7 +30,7 @@ namespace Chameleon
 
         static ConfigFile configFile;
 
-        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, giantSkins, fixDoorMeshes, fancyFoliage, fancyShrouds, fogReprojection, fixTitanVolume, fixArtificeVolume;
+        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, giantSkins, fixDoorMeshes, fancyFoliage, fancyShrouds, fogReprojection, fixTitanVolume, fixArtificeVolume, blackoutWindows;
         internal static ConfigEntry<GordionStorms> stormyGordion;
         internal static ConfigEntry<FogQuality> fogQuality;
         internal static ConfigEntry<float> weatherAmbience;
@@ -170,6 +170,12 @@ namespace Chameleon
                 "PowerOffWindows",
                 true,
                 "When the breaker box is turned off, the \"fake window\" rooms will also turn off.");
+
+            blackoutWindows = configFile.Bind(
+                "Interior.Manor",
+                "BlackoutWindows",
+                false,
+                "When windows turn off, they will be solid black, instead of darkening the image they normally display.");
 
             PopulateWindowsList(WindowType.Pasture, "Vow:100,March:100,Adamance:100,Artifice:100");
             PopulateWindowsList(WindowType.Canyon, "Experimentation:100,Assurance:100,Offense:100,Titan:100");
@@ -335,6 +341,9 @@ namespace Chameleon
 
             configFile.Bind("Interior", "FixDoorSounds", true, "Legacy setting, doesn't work");
             configFile.Remove(configFile["Interior", "FixDoorSounds"].Definition);
+
+            configFile.Bind("Interior.Manor", "WindowVariants", true, "Legacy setting, doesn't work");
+            configFile.Remove(configFile["Interior.Manor", "WindowVariants"].Definition);
 
             configFile.Save();
         }

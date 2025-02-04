@@ -17,17 +17,33 @@ namespace Chameleon.Overrides.Interior
             if (string.IsNullOrEmpty(Common.interior) || Common.interior != "Level3Flow")
                 return;
 
+            GameObject dungeonRoot = GameObject.Find("/Systems/LevelGeneration/LevelGenerationRoot");
+            if (dungeonRoot == null)
+            {
+                Plugin.Logger.LogWarning("Skipping mineshaft retexture because there was an error finding the dungeon object tree.");
+                return;
+            }
+
             CavernType type = GetCurrentMoonCaverns();
             if (type == CavernType.Vanilla)
                 return;
 
+            VanillaLevelsInfo.predefinedCaverns.TryGetValue(type, out CavernInfo currentCavernInfo);
+            if (currentCavernInfo == null)
+            {
+                Plugin.Logger.LogWarning("Skipping mineshaft retexture because there was an error finding cavern specifications.");
+                return;
+            }
+
             string assets = type.ToString().ToLower() + "cave";
-            Material caveRocks = null, coalMat = null;
+            Material caveRocks = null, coalMat = null, smallRocks = null;
             try
             {
                 AssetBundle assetBundle = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), assets));
                 caveRocks = assetBundle.LoadAsset<Material>("CaveRocks1");
                 coalMat = assetBundle.LoadAsset<Material>("CoalMat");
+                if (!string.IsNullOrEmpty(currentCavernInfo.smallRockMat))
+                    smallRocks = assetBundle.LoadAsset<Material>(currentCavernInfo.smallRockMat);
                 assetBundle.Unload(false);
             }
             catch
@@ -37,20 +53,6 @@ namespace Chameleon.Overrides.Interior
             if (caveRocks == null)
             {
                 Plugin.Logger.LogWarning("Skipping mineshaft retexture because there was an error loading the replacement material.");
-                return;
-            }
-
-            GameObject dungeonRoot = GameObject.Find("/Systems/LevelGeneration/LevelGenerationRoot");
-            if (dungeonRoot == null)
-            {
-                Plugin.Logger.LogWarning("Skipping mineshaft retexture because there was an error finding the dungeon object tree.");
-                return;
-            }
-
-            VanillaLevelsInfo.predefinedCaverns.TryGetValue(type, out CavernInfo currentCavernInfo);
-            if (currentCavernInfo == null)
-            {
-                Plugin.Logger.LogWarning("Skipping mineshaft retexture because there was an error finding cavern specifications.");
                 return;
             }
 
@@ -64,7 +66,9 @@ namespace Chameleon.Overrides.Interior
                 }
                 else if (rend.sharedMaterial != null)
                 {
-                    if (rend.sharedMaterial.name.StartsWith(caveRocks.name))
+                    if (smallRocks != null && rend.name.Contains("RockPile"))
+                        rend.material = smallRocks;
+                    else if (rend.sharedMaterial.name.StartsWith(caveRocks.name))
                     {
                         rend.material = caveRocks;
                         if (rend.CompareTag("Rock") && !string.IsNullOrEmpty(currentCavernInfo.tag))
@@ -80,7 +84,7 @@ namespace Chameleon.Overrides.Interior
                 }
             }
 
-            if (currentCavernInfo.noDrips)
+            if (currentCavernInfo.noDrips && StartOfRound.Instance.currentLevel.currentWeather != LevelWeatherType.Flooded)
             {
                 foreach (LocalPropSet localPropSet in dungeonRoot.GetComponentsInChildren<LocalPropSet>())
                 {

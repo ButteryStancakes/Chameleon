@@ -91,7 +91,8 @@ namespace Chameleon.Info
                 tag = "Snow",
                 waterColor = true,
                 waterColorShallow = new Color(0f, 0.18982977f, 0.20754719f, 0.972549f),
-                waterColorDeep = new Color(0.12259702f, 0.1792453f, 0.16491137f, 0.9882353f)
+                waterColorDeep = new Color(0.12259702f, 0.1792453f, 0.16491137f, 0.9882353f),
+                smallRockMat = "CaveRocks1 1"
             }},
             { CavernType.Amethyst, new(){
                 noDrips = true,
@@ -99,7 +100,9 @@ namespace Chameleon.Info
                 waterColorShallow = new Color(0.25098039215f, 0.26274509803f, 0.27843137254f, 0.972549f),
                 waterColorDeep = new Color(0.16470588235f, 0.14901960784f, 0.1725490196f, 0.9882353f)
             }},
-            { CavernType.Desert, new() },
+            { CavernType.Desert, new(){
+                noDrips = true
+            }},
             { CavernType.Mesa, new(){
                 tag = "Gravel"
             }},

@@ -14,7 +14,7 @@ namespace Chameleon.Info
 
     internal class CavernInfo
     {
-        internal string tag = null;
+        internal string tag = null, smallRockMat = null;
         internal bool waterColor = false;
         internal Color waterColorShallow = new(0.3018868f, 0.24540168f, 0.22926308f, 0.972549f), waterColorDeep = new(0.254717f, 0.2132654f, 0.17181382f, 0.9882353f);
         internal bool noDrips = false;
