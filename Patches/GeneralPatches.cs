@@ -22,6 +22,7 @@ namespace Chameleon.Patches
         [HarmonyPriority(Priority.LowerThanNormal + 1)] // "Tonight, We Dine" uses 300
         static void PostFinishGeneratingNewLevelClientRpc(RoundManager __instance)
         {
+            Common.breakerBoxHasReset = true;
             SceneOverrides.OverrideScene();
         }
 
@@ -58,7 +59,7 @@ namespace Chameleon.Patches
         [HarmonyPostfix]
         static void RoundManagerPostUpdate(RoundManager __instance)
         {
-            if (__instance.powerOffPermanently)
+            if (__instance.powerOffPermanently && Common.breakerBoxHasReset)
                 BreakerBoxShutdown.ShutOff();
         }
     }

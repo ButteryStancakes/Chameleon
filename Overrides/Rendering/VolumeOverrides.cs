@@ -1,9 +1,9 @@
 ﻿using Chameleon.Info;
 using System.IO;
 using System.Reflection;
-using UnityEngine.Rendering.HighDefinition;
-using UnityEngine.Rendering;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.HighDefinition;
 
 namespace Chameleon.Overrides.Rendering
 {

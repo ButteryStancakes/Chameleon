@@ -38,7 +38,7 @@ namespace Chameleon.Patches
                     foreach (SkinnedMeshRenderer rend in __instance.GetComponentsInChildren<SkinnedMeshRenderer>())
                     {
                         if (giantNormal == null)
-                            giantNormal = rend.material.mainTexture;
+                            giantNormal = rend.sharedMaterial.mainTexture;
 
                         rend.material.mainTexture = giantSnowy;
                     }
@@ -52,7 +52,7 @@ namespace Chameleon.Patches
         [HarmonyPostfix]
         static void PostSwitchToBehaviourStateOnLocalClient(EnemyAI __instance, int stateIndex)
         {
-            if (__instance is ForestGiantAI && Configuration.giantSkins.Value && Queries.IsSnowLevel() && giantNormal != null)
+            if (stateIndex == 2 && __instance is ForestGiantAI && Configuration.giantSkins.Value && Queries.IsSnowLevel() && giantNormal != null)
             {
                 foreach (SkinnedMeshRenderer rend in __instance.GetComponentsInChildren<SkinnedMeshRenderer>())
                     rend.material.mainTexture = giantNormal;

@@ -34,6 +34,7 @@ namespace Chameleon
                 return breakerBox;
             }
         }
+        internal static bool breakerBoxHasReset;
 
         internal static void GetReferences()
         {
@@ -60,11 +61,11 @@ namespace Chameleon
             }
 
             Plugin.Logger.LogDebug("Now assembling final weighted lists");
-            AssembleWeightedList(ref RetextureCaverns.cavernWeightLists, ref Configuration.cavernMappings);
-            AssembleWeightedList(ref ManorWindows.windowWeightLists, ref Configuration.windowMappings);
+            AssembleWeightedList<CavernType>(ref RetextureCaverns.cavernWeightLists, ref Configuration.cavernMappings);
+            AssembleWeightedList<WindowType>(ref ManorWindows.windowWeightLists, ref Configuration.windowMappings);
         }
 
-        static void AssembleWeightedList(ref Dictionary<string, IntWithRarity[]> weightLists, ref List<Configuration.MoonTypeMapping> mappings)
+        static void AssembleWeightedList<T>(ref Dictionary<string, IntWithRarity[]> weightLists, ref List<Configuration.MoonTypeMapping> mappings)
         {
             weightLists.Clear();
 
@@ -83,7 +84,7 @@ namespace Chameleon
                             id = mapping.type,
                             rarity = mapping.weight
                         });
-                        Plugin.Logger.LogDebug($"{level.name} - {mapping.type} @ {mapping.weight}");
+                        Plugin.Logger.LogDebug($"{level.name} - {(T)(object)mapping.type} @ {mapping.weight}");
                     }
                     if (tempWeights.Count > 0)
                         weightLists.Add(level.name, [.. tempWeights]);

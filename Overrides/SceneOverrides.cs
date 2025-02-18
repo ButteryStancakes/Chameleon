@@ -29,6 +29,7 @@ namespace Chameleon.Overrides
             applyOverrides += WeatherAmbience.Apply;
 
             applyOverrides += RockRecolorer.Apply;
+            applyOverrides += ReworkFoggy.Apply;
             applyOverrides += DoorLightColorer.Apply;
             applyOverrides += RetextureCaverns.Apply;
             applyOverrides += ManorWindows.Apply;
@@ -53,6 +54,7 @@ namespace Chameleon.Overrides
         {
             done = false;
 
+            Common.breakerBoxHasReset = false;
             resetOverrides?.Invoke();
         }
 

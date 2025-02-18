@@ -30,7 +30,7 @@ namespace Chameleon
 
         static ConfigFile configFile;
 
-        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, giantSkins, fixDoorMeshes, fancyFoliage, fancyShrouds, fogReprojection, fixTitanVolume, fixArtificeVolume, blackoutWindows;
+        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, giantSkins, fixDoorMeshes, fancyFoliage, fancyShrouds, fogReprojection, fixTitanVolume, fixArtificeVolume, blackoutWindows, reworkFoggyWeather;
         internal static ConfigEntry<GordionStorms> stormyGordion;
         internal static ConfigEntry<FogQuality> fogQuality;
         internal static ConfigEntry<float> weatherAmbience;
@@ -124,6 +124,12 @@ namespace Chameleon
                 true,
                 "Prevents the morning/afternoon ambience music from playing during Eclipsed weather, which has its own ambient track.");
 
+            reworkFoggyWeather = configFile.Bind(
+                "Exterior",
+                "ReworkFoggyWeather",
+                true,
+                "(Vanilla moons only) Change the visuals of foggy weather to better fit the visuals of the moon itself.");
+
             giantSkins = configFile.Bind(
                 "Exterior",
                 "GiantSkins",
@@ -154,7 +160,7 @@ namespace Chameleon
             weatherAmbience = configFile.Bind(
                 "Interior",
                 "WeatherAmbience",
-                0.5f,
+                0.4f,
                 new ConfigDescription(
                     "On moons where a blizzard or rainstorm is present, you will be able to hear it faintly while inside the building. Set volume from 0 (silent) to 1 (max).",
                     new AcceptableValueRange<float>(0f, 1f)));
@@ -266,7 +272,7 @@ namespace Chameleon
         static void PopulateCavernsList(CavernType type, string defaultList)
         {
             string listName = $"{type}CavesList";
-            
+
             string customList = configFile.Bind(
                 "Interior.Mineshaft",
                 listName,
