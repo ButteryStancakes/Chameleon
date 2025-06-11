@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Chameleon.Overrides.Exterior;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Chameleon.Info
@@ -92,6 +93,8 @@ namespace Chameleon.Info
                 waterColor = true,
                 waterColorShallow = new Color(0f, 0.18982977f, 0.20754719f, 0.972549f),
                 waterColorDeep = new Color(0.12259702f, 0.1792453f, 0.16491137f, 0.9882353f),
+                //waterColorShallow = new Color(0.7028302f, 0.9077749f, 1f, 1f),
+                //waterColorDeep = new Color(0.4775274f, 0.5763646f, 0.6886792f, 0.8156863f),
                 smallRockMat = "CaveRocks1 1"
             }},
             { CavernType.Amethyst, new(){
@@ -111,6 +114,21 @@ namespace Chameleon.Info
                 waterColor = true,
                 waterColorShallow = new Color(0.2f, 0.2f, 0.2f, 0.972549f),
                 waterColorDeep = new Color(0.15f, 0.15f, 0.15f, 0.9882353f)
+            }},
+            { CavernType.Salt, new(){
+                noRockMat = true,
+                rockColor = new Color(0.827451f, 0.7529412f, 0.6862745f),
+                rockNormals = 0.7f,
+                waterColor = true,
+                waterColorShallow = new Color(0.4313725f, 0.3843137f, 0.2156862f, 0.972549f),
+                waterColorDeep = new Color(0.2980392f, 0.2313725f, 0.1294117f, 0.9882353f)
+            }},
+            { CavernType.Slate, new(){
+                noRockMat = true,
+                rockColor = RockRecolorer.ROCK_GRAY,
+                waterColor = true,
+                waterColorShallow = new Color(0.254902f, 0.2627451f, 0.2901961f, 0.972549f),
+                waterColorDeep = new Color(0.0627451f, 0.1372549f, 0.145098f, 0.9882353f)
             }}
         };
 

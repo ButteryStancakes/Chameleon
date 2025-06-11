@@ -19,7 +19,7 @@ namespace Chameleon.Patches
 
         [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.FinishGeneratingNewLevelClientRpc))]
         [HarmonyPostfix]
-        [HarmonyPriority(Priority.LowerThanNormal + 1)] // "Tonight, We Dine" uses 300
+        [HarmonyBefore("TonightWeDine")]
         static void PostFinishGeneratingNewLevelClientRpc(RoundManager __instance)
         {
             Common.breakerBoxHasReset = true;

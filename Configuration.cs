@@ -201,7 +201,7 @@ namespace Chameleon
                 listName,
                 defaultList,
                 $"A list of moons for which to assign \"{Regex.Replace(type.ToString(), "([A-Z])", " $1").TrimStart()}\" windows, with their respective weights.{(type != WindowType.Pasture ? " Leave empty to disable." : string.Empty)}\n"
-              + "Moon names are not case-sensitive, and can be left incomplete (ex. \"as\" will map to both Assurance and Asteroid-13.)"
+              + "Moon names are not case-sensitive, and can be left incomplete (ex. \"as\" will map to both Assurance and Asteroid-13.) \"ALL\" will add that weight to every moon's pool."
               + (type == WindowType.Pasture ? "\nUpon hosting a lobby, the full list of moon names will be printed in the debug log, which you can use as a guide." : string.Empty)).Value;
 
             if (string.IsNullOrEmpty(customList))
@@ -210,10 +210,10 @@ namespace Chameleon
                 return;
             }
 
-            PopulateGlobalListWithType((int)type, customList, ref windowMappings, listName);
+            PopulateGlobalListWithType((int)type, customList, ref windowMappings, listName, type.ToString());
         }
 
-        static void PopulateGlobalListWithType(int type, string customList, ref List<MoonTypeMapping> mappings, string listName)
+        static void PopulateGlobalListWithType(int type, string customList, ref List<MoonTypeMapping> mappings, string listName, string displayName)
         {
             if (string.IsNullOrEmpty(customList))
             {
@@ -231,14 +231,15 @@ namespace Chameleon
                     {
                         if (weight != 0)
                         {
+                            string inputName = moonAndWeight[0].ToLower();
                             MoonTypeMapping mapping = new()
                             {
-                                moon = moonAndWeight[0].ToLower(),
+                                moon = inputName == "all" ? "ALL" : inputName,
                                 type = type,
                                 weight = (int)Mathf.Clamp(weight, 1f, 99999f)
                             };
                             mappings.Add(mapping);
-                            Plugin.Logger.LogDebug($"Successfully added \"{mapping.moon}\" to \"{mapping.type}\" list with weight {mapping.weight}");
+                            Plugin.Logger.LogDebug($"Successfully added \"{mapping.moon}\" to \"{displayName}\" list with weight {mapping.weight}");
                         }
                         else
                             Plugin.Logger.LogDebug($"Skipping \"{weightedMoon}\" in \"{listName}\" because weight is 0");
@@ -261,12 +262,14 @@ namespace Chameleon
             PopulateCavernsList(CavernType.Ice, "Rend:100,Dine:100");
             PopulateCavernsList(CavernType.Amethyst, "Embrion:100");
             PopulateCavernsList(CavernType.Gravel, "Artifice:13");
+            PopulateCavernsList(CavernType.Salt, string.Empty);
+            PopulateCavernsList(CavernType.Slate, string.Empty);
 
             autoAdaptSnow = configFile.Bind(
                 "Interior.Mineshaft",
                 "AutoAdaptSnow",
-                true,
-                "Automatically enable ice caverns on modded levels that are snowy.\nIf you have Artifice Blizzard installed, this will also change the caverns to ice specifically when the blizzard is active.");
+                false,
+                "Automatically enable ice (or salt, without Buttery Fixes) caverns on modded levels that are snowy.\nIf you have Artifice Blizzard installed, this will also change the caverns specifically only when the blizzard is active.");
         }
 
         static void PopulateCavernsList(CavernType type, string defaultList)
@@ -278,7 +281,7 @@ namespace Chameleon
                 listName,
                 defaultList,
                 $"A list of moons for which to assign \"{type}\" caves, with their respective weights.{(type != CavernType.Vanilla ? " Leave empty to disable." : string.Empty)}\n"
-              + "Moon names are not case-sensitive, and can be left incomplete (ex. \"as\" will map to both Assurance and Asteroid-13.)"
+              + "Moon names are not case-sensitive, and can be left incomplete (ex. \"as\" will map to both Assurance and Asteroid-13.) \"ALL\" will add that weight to every moon's pool."
               + (type == CavernType.Vanilla ? "\nUpon hosting a lobby, the full list of moon names will be printed in the debug log, which you can use as a guide." : string.Empty)).Value;
 
             if (string.IsNullOrEmpty(customList))
@@ -287,7 +290,7 @@ namespace Chameleon
                 return;
             }
 
-            PopulateGlobalListWithType((int)type, customList, ref cavernMappings, listName);
+            PopulateGlobalListWithType((int)type, customList, ref cavernMappings, listName, type.ToString());
         }
 
         static void MigrateLegacyConfigs()

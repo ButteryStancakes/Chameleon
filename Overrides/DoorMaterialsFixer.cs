@@ -40,9 +40,9 @@ namespace Chameleon.Overrides
                         doorMats[5] = helmetGlass;
                     doorMesh.sharedMaterials = doorMats;
                 }
-                else if (doorMesh.sharedMaterial != null && (doorMesh.sharedMaterial.name.StartsWith("FancyManorTex") && doorMesh.GetComponentInChildren<InteractTrigger>() != null || doorMesh.sharedMaterial.name.StartsWith("DoorWood")))
+                else if (doorMesh.sharedMaterial != null && doorMesh.sharedMaterials.Length == 1 && doorMesh.TryGetComponent(out MeshFilter meshFilter) && meshFilter.sharedMesh.name == "FancyDoor")
                 {
-                    doorMesh.sharedMaterial.shader = material001.shader;
+                    doorMesh.material.shader = material001.shader;
                     doorMesh.sharedMaterial.doubleSidedGI = true;
                     doorMesh.sharedMaterial.EnableKeyword("_DOUBLESIDED_ON");
                     doorMesh.sharedMaterial.SetFloat("_CullMode", 0f);

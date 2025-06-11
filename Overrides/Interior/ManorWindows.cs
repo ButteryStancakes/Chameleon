@@ -9,18 +9,26 @@ namespace Chameleon.Overrides.Interior
 {
     internal class ManorWindows
     {
+        class WindowedTile
+        {
+            internal Renderer renderer;
+            internal Light light;
+            internal bool bedroom;
+        }
+
         internal static Dictionary<string, IntWithRarity[]> windowWeightLists = [];
 
-        static Material fakeWindowOn = null, fakeWindowOff = null;
-        static List<(Renderer room, Light light)> windowTiles = [];
+        static Material fakeWindowOn = null, fakeWindowOff = null, fakeWindow2On = null, fakeWindow2Off = null;
+        static List<WindowedTile> allTiles = [];
 
+        // TODO: this desperately needs a rewrite
+        // accounting for all the v70 changes has turned this into an ugly, ugly beast, and I am no longer proud to be its mother
         internal static void Apply()
         {
             if (string.IsNullOrEmpty(Common.interior) || Common.interior != "Level2Flow")
                 return;
 
-            GameObject dungeonRoot = GameObject.Find("/Systems/LevelGeneration/LevelGenerationRoot");
-            if (dungeonRoot == null)
+            if (Common.dungeonRoot == null)
             {
                 Plugin.Logger.LogWarning("Skipping manor search because there was an error finding the dungeon object tree.");
                 return;
@@ -38,11 +46,38 @@ namespace Chameleon.Overrides.Interior
                 {
                     fakeWindowOn = windowVariants.LoadAsset<Material>($"FakeWindowView{type}");
                     fakeWindowOff = (currentWindowInfo != null && !currentWindowInfo.blackWhenOff) ? windowVariants.LoadAsset<Material>($"FakeWindowView{type}Off") : null;
+                    if (type == WindowType.Flowery && fakeWindowOn != null && fakeWindowOff != null)
+                    {
+                        fakeWindow2On = Object.Instantiate(fakeWindowOn);
+                        fakeWindow2Off = Object.Instantiate(fakeWindowOff);
+                        Vector2 offset = new(0f, 0.73f);
+                        foreach (Material mat in new Material[] { fakeWindow2On, fakeWindow2Off })
+                        {
+                            foreach (string field in new string[] { "_MainTex", "_BaseColorMap", "_EmissiveColorMap", "_UnlitColorMap" })
+                            {
+                                if (mat.HasTexture(field))
+                                {
+                                    mat.SetTextureOffset(field, offset);
+                                    Plugin.Logger.LogDebug($"{mat.name}.{field}: {offset}");
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        fakeWindow2On = fakeWindowOn;
+                        fakeWindow2Off = fakeWindowOff;
+                    }
                 }
                 else
                 {
                     fakeWindowOn = null;
                     fakeWindowOff = windowVariants.LoadAsset<Material>($"FakeWindowViewOff");
+                    fakeWindow2On = null;
+                    fakeWindow2Off = Object.Instantiate(fakeWindowOff);
+                    Vector2 offset = new(0f, 0.42f);
+                    foreach (string field in new string[] { "_MainTex", "_BaseColorMap" })
+                        fakeWindow2Off.SetTextureOffset(field, offset);
                 }
                 windowVariants.Unload(false);
             }
@@ -50,9 +85,12 @@ namespace Chameleon.Overrides.Interior
             {
                 Plugin.Logger.LogError("Encountered some error loading assets from bundle \"windowvariants\". Did you install the plugin correctly?");
                 fakeWindowOn = null;
+                fakeWindowOff = null;
+                fakeWindow2On = null;
+                fakeWindow2Off = null;
             }
 
-            foreach (Renderer rend in dungeonRoot.GetComponentsInChildren<Renderer>())
+            foreach (Renderer rend in Common.dungeonRoot.GetComponentsInChildren<Renderer>())
             {
                 if (rend.transform.parent.name.StartsWith("WindowTile") && rend.name == "mesh" && rend.sharedMaterials.Length > 5 && rend.sharedMaterials[5]?.name == "FakeWindowView")
                 {
@@ -68,13 +106,40 @@ namespace Chameleon.Overrides.Interior
                             screenLight.color = currentWindowInfo.filterColor;
                         }
 
-                        windowTiles.Add((rend, screenLight));
+                        allTiles.Add(new()
+                        {
+                            renderer = rend,
+                            light = screenLight
+                        });
                         Plugin.Logger.LogDebug("Cached window tile instance");
+                    }
+                }
+                else if (rend.name == "BedroomWindow" && rend.sharedMaterials.Length >= 2 && rend.sharedMaterials[1]?.name == "FakeWindowView2")
+                {
+                    if (fakeWindow2On == null)
+                        fakeWindow2On = rend.sharedMaterials[1];
+
+                    Light windowLight = rend.transform.Find("WindowLight")?.GetComponent<Light>();
+                    if (windowLight != null)
+                    {
+                        if (currentWindowInfo != null)
+                        {
+                            windowLight.colorTemperature = currentWindowInfo.lightTemp;
+                            windowLight.color = currentWindowInfo.filterColor;
+                        }
+
+                        allTiles.Add(new()
+                        {
+                            renderer = rend,
+                            light = windowLight,
+                            bedroom = true
+                        });
+                        Plugin.Logger.LogDebug("Cached bedroom tile instance");
                     }
                 }
             }
 
-            if (windowTiles.Count > 0)
+            if (allTiles.Count > 0)
             {
                 // in case the level begins with the power off
                 BreakerBox breakerBox = Common.BreakerBox;
@@ -89,7 +154,7 @@ namespace Chameleon.Overrides.Interior
 
         static void Reset()
         {
-            windowTiles.Clear();
+            allTiles.Clear();
             fakeWindowOn = null;
             fakeWindowOff = null;
 
@@ -98,7 +163,7 @@ namespace Chameleon.Overrides.Interior
 
         internal static void ToggleAll(bool powered)
         {
-            if (windowTiles.Count < 1)
+            if (allTiles.Count < 1)
                 return;
 
             if (powered)
@@ -109,12 +174,15 @@ namespace Chameleon.Overrides.Interior
             else if (!Configuration.powerOffWindows.Value || (fakeWindowOff == null && Common.black == null))
                 return;
 
-            foreach ((Renderer rend, Light light) in windowTiles)
+            foreach (WindowedTile tile in allTiles)
             {
-                Material[] mats = rend.sharedMaterials;
-                mats[5] = powered ? fakeWindowOn : (fakeWindowOff != null && !Configuration.blackoutWindows.Value) ? fakeWindowOff : Common.black;
-                rend.sharedMaterials = mats;
-                light.enabled = powered;
+                Material[] mats = tile.renderer.sharedMaterials;
+                if (tile.bedroom)
+                    mats[1] = powered ? fakeWindow2On : (fakeWindow2Off != null && !Configuration.blackoutWindows.Value) ? fakeWindow2Off : Common.black;
+                else
+                    mats[5] = powered ? fakeWindowOn : (fakeWindowOff != null && !Configuration.blackoutWindows.Value) ? fakeWindowOff : Common.black;
+                tile.renderer.sharedMaterials = mats;
+                tile.light.enabled = powered;
             }
         }
 

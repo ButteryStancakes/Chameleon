@@ -10,10 +10,8 @@ namespace Chameleon.Overrides.Exterior
                 return;
 
             // fix rain falling through the platform by changing "Colliders" layer to "Room"
-            // NOTE: this also fixes the radar. so always do this
             Transform map = GameObject.Find("/Environment/Map")?.transform;
             foreach (string collName in new string[]{
-                "CompanyPlanet/Cube",
                 "CompanyPlanet/Cube/Colliders/Cube",
                 "CompanyPlanet/Cube/Colliders/Cube (2)",
                 "CompanyPlanet/Cube/Colliders/Cube (3)",
@@ -31,20 +29,6 @@ namespace Chameleon.Overrides.Exterior
                 "ShippingContainers/ShippingContainer (8)",
                 "ShippingContainers/ShippingContainer (9)",
                 "ShippingContainers/ShippingContainer (10)",
-
-                // just for radar
-                "CompanyPlanet/CatwalkChunk",
-                "CompanyPlanet/CatwalkChunk.001",
-                "CompanyPlanet/CatwalkStairTile",
-                "CompanyPlanet/Cylinder",
-                "CompanyPlanet/Cylinder.001",
-                "CompanyPlanet/LargePipeSupportBeam",
-                "CompanyPlanet/LargePipeSupportBeam.001",
-                "CompanyPlanet/LargePipeSupportBeam.002",
-                "CompanyPlanet/LargePipeSupportBeam.003",
-                "CompanyPlanet/Scaffolding",
-                "CompanyPlanet/Scaffolding.001",
-                "GiantDrill/DrillMainBody",
             })
             {
                 Transform coll = map.Find(collName);

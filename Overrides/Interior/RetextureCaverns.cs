@@ -17,8 +17,7 @@ namespace Chameleon.Overrides.Interior
             if (string.IsNullOrEmpty(Common.interior) || Common.interior != "Level3Flow")
                 return;
 
-            GameObject dungeonRoot = GameObject.Find("/Systems/LevelGeneration/LevelGenerationRoot");
-            if (dungeonRoot == null)
+            if (Common.dungeonRoot == null)
             {
                 Plugin.Logger.LogWarning("Skipping mineshaft retexture because there was an error finding the dungeon object tree.");
                 return;
@@ -35,6 +34,9 @@ namespace Chameleon.Overrides.Interior
                 return;
             }
 
+            if (!string.IsNullOrEmpty(currentCavernInfo.tag) && currentCavernInfo.tag != "Rock" && !Common.INSTALLED_BUTTERY_FIXES)
+                Plugin.Logger.LogWarning("A cavern type with custom footsteps has been selected, but Buttery Fixes is not installed - Footstep changes are not supported!");
+
             string assets = type.ToString().ToLower() + "cave";
             Material caveRocks = null, coalMat = null, smallRocks = null;
             try
@@ -50,28 +52,35 @@ namespace Chameleon.Overrides.Interior
             {
                 Plugin.Logger.LogError($"Encountered some error loading assets from bundle \"{assets}\". Did you install the plugin correctly?");
             }
-            if (caveRocks == null)
+            if (caveRocks == null && !currentCavernInfo.noRockMat)
             {
                 Plugin.Logger.LogWarning("Skipping mineshaft retexture because there was an error loading the replacement material.");
                 return;
             }
 
-            foreach (Renderer rend in dungeonRoot.GetComponentsInChildren<Renderer>())
+            foreach (Renderer rend in Common.dungeonRoot.GetComponentsInChildren<Renderer>())
             {
                 if (rend.name == "MineshaftStartTileMesh")
                 {
                     Material[] startTileMats = rend.materials;
-                    startTileMats[3] = caveRocks;
+                    if (!currentCavernInfo.noRockMat)
+                        startTileMats[3] = caveRocks;
+                    else
+                        AdjustRockMaterial(startTileMats[3], currentCavernInfo);
                     rend.materials = startTileMats;
                 }
                 else if (rend.sharedMaterial != null)
                 {
                     if (smallRocks != null && rend.name.Contains("RockPile"))
                         rend.material = smallRocks;
-                    else if (rend.sharedMaterial.name.StartsWith(caveRocks.name))
+                    else if (rend.sharedMaterial.name.StartsWith("CaveRocks1"))
                     {
-                        rend.material = caveRocks;
-                        if (rend.CompareTag("Rock") && !string.IsNullOrEmpty(currentCavernInfo.tag))
+                        if (!currentCavernInfo.noRockMat)
+                            rend.material = caveRocks;
+                        else
+                            AdjustRockMaterial(rend.material, currentCavernInfo);
+
+                        if (rend.CompareTag("Rock") && !string.IsNullOrEmpty(currentCavernInfo.tag) && Common.INSTALLED_BUTTERY_FIXES)
                             rend.tag = currentCavernInfo.tag;
                     }
                     else if (currentCavernInfo.waterColor && rend.name == "Water (1)" && rend.sharedMaterial.name.StartsWith("CaveWater"))
@@ -86,7 +95,7 @@ namespace Chameleon.Overrides.Interior
 
             if (currentCavernInfo.noDrips && StartOfRound.Instance.currentLevel.currentWeather != LevelWeatherType.Flooded)
             {
-                foreach (LocalPropSet localPropSet in dungeonRoot.GetComponentsInChildren<LocalPropSet>())
+                foreach (LocalPropSet localPropSet in Common.dungeonRoot.GetComponentsInChildren<LocalPropSet>())
                 {
                     if (localPropSet.name.StartsWith("WaterDrips"))
                     {
@@ -101,8 +110,8 @@ namespace Chameleon.Overrides.Interior
         {
             if (Configuration.autoAdaptSnow.Value && Queries.IsSnowLevel() && (StartOfRound.Instance.currentLevel.name == "ArtificeLevel" || !VanillaLevelsInfo.predefinedLevels.ContainsKey(StartOfRound.Instance.currentLevel.name)))
             {
-                Plugin.Logger.LogDebug("Snow level detected, automatically enabling ice caverns");
-                return CavernType.Ice;
+                Plugin.Logger.LogDebug("Snow level detected, automatically enabling white caverns");
+                return Common.INSTALLED_BUTTERY_FIXES ? CavernType.Ice : CavernType.Salt;
             }
 
             if (cavernWeightLists.TryGetValue(StartOfRound.Instance.currentLevel.name, out IntWithRarity[] mineshaftWeightList))
@@ -129,6 +138,15 @@ namespace Chameleon.Overrides.Interior
                 Plugin.Logger.LogDebug("No custom cave weights were defined for the current moon. Falling back to vanilla caverns");
 
             return CavernType.Vanilla;
+        }
+
+        static void AdjustRockMaterial(Material mat, CavernInfo info)
+        {
+            mat.SetColor("_Color", info.rockColor);
+            mat.SetColor("_BaseColor", info.rockColor);
+            mat.SetTexture("_MainTex", null);
+            mat.SetTexture("_BaseColorMap", null);
+            mat.SetFloat("_NormalScale", info.rockNormals);
         }
     }
 }

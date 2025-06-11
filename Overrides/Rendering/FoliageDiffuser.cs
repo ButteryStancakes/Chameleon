@@ -26,6 +26,15 @@ namespace Chameleon.Overrides.Rendering
                 RoundManager.Instance.mapPropsContainer = GameObject.FindGameObjectWithTag("MapPropsContainer");
             if (RoundManager.Instance.mapPropsContainer != null)
                 ApplyToRenderers(RoundManager.Instance.mapPropsContainer.GetComponentsInChildren<Renderer>().Where(FilterObjects));
+
+            if (RoundManager.Instance.currentDungeonType == 1 && Common.dungeonRoot != null)
+            {
+                foreach (Transform tile in Common.dungeonRoot.transform)
+                {
+                    if (tile.name.StartsWith("GreenhouseTile"))
+                        ApplyToRenderers(tile.GetComponentsInChildren<Renderer>().Where(FilterObjects));
+                }
+            }
         }
 
         internal static void ApplyToRenderers(IEnumerable<Renderer> renderers)
@@ -36,17 +45,21 @@ namespace Chameleon.Overrides.Rendering
             foreach (Renderer rend in renderers)
             {
                 Material foliageMat = rend.sharedMaterial;
+                if (foliageMat.GetFloat("_DiffusionProfileHash") == foliageDiffusionProfileHash && foliageMat.GetFloat("_MaterialID") == 5f)
+                {
+                    //Plugin.Logger.LogDebug($"\"{foliageMat.name}\" already supports foliage diffusion");
+                    continue;
+                }
+
                 int savedQueue = foliageMat.renderQueue;
                 foliageMat.shader = diffuseLeaves.shader;
                 foliageMat.renderQueue = savedQueue;
-                //foliageMat.SetFloat("_MaterialID", 5);
                 foliageMat.SetFloat("_DiffusionProfileHash", foliageDiffusionProfileHash);
-                //foliageMat.EnableKeyword("_MATERIAL_FEATURE_TRANSMISSION");
-                //foliageMat.EnableKeyword("_TRANSMISSION_MASK_MAP");
                 foliageMat.shaderKeywords = foliageMat.shaderKeywords.Union(diffuseLeaves.shaderKeywords).ToArray();
                 if (foliageMat.name.StartsWith("ForestTexture"))
                     foliageMat.SetTexture("_TransmissionMaskMap", diffuseLeaves.GetTexture("_TransmissionMaskMap"));
-                Plugin.Logger.LogDebug($"Applied foliage diffusion to \"{rend.name}\"");
+                foliageMat.SetFloat("_MaterialID", 5f);
+                Plugin.Logger.LogDebug($"Applied foliage diffusion to \"{foliageMat.name}\" ({rend.name})");
             }
         }
 
@@ -79,7 +92,7 @@ namespace Chameleon.Overrides.Rendering
 
         static bool FilterObjects(Renderer rend)
         {
-            return rend.sharedMaterial != null && (rend.sharedMaterial.name.StartsWith("ForestTexture") || rend.sharedMaterial.name.StartsWith("TreeFlat") || rend.sharedMaterial.name.StartsWith("Leaves"));
+            return rend.sharedMaterial != null && (rend.sharedMaterial.name.StartsWith("ForestTexture") || rend.sharedMaterial.name.StartsWith("TreeFlat") || rend.sharedMaterial.name.StartsWith("Leaves") || rend.sharedMaterial.name.StartsWith("GreenhousePlantsMat"));
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Chameleon.Info;
 using Chameleon.Overrides.Interior;
+using DunGen;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace Chameleon
 {
     internal class Common
     {
-        internal static bool INSTALLED_ARTIFICE_BLIZZARD;
+        internal static bool INSTALLED_ARTIFICE_BLIZZARD, INSTALLED_BUTTERY_FIXES;
 
         // * ----- REFERENCES ----- *
 
@@ -36,9 +37,13 @@ namespace Chameleon
         }
         internal static bool breakerBoxHasReset;
 
+        internal static GameObject dungeonRoot;
+
         internal static void GetReferences()
         {
-            interior = StartOfRound.Instance.currentLevel.name != "CompanyBuildingLevel" ? RoundManager.Instance?.dungeonGenerator?.Generator?.DungeonFlow?.name : string.Empty;
+            DungeonGenerator generator = RoundManager.Instance?.dungeonGenerator?.Generator;
+
+            interior = StartOfRound.Instance.currentLevel.name != "CompanyBuildingLevel" ? generator?.DungeonFlow?.name : string.Empty;
 
             if (!VanillaLevelsInfo.predefinedLevels.TryGetValue(StartOfRound.Instance.currentLevel.name, out currentLevelCosmeticInfo))
                 currentLevelCosmeticInfo = null;
@@ -49,6 +54,8 @@ namespace Chameleon
                 if (artificeBlizzard != null)
                     Plugin.Logger.LogInfo("Artifice Blizzard compatibility success");
             }
+
+            dungeonRoot = generator?.Root ?? GameObject.Find("/Systems/LevelGeneration/LevelGenerationRoot");
         }
 
         internal static void BuildWeightLists()
@@ -77,7 +84,7 @@ namespace Chameleon
                 try
                 {
                     List<IntWithRarity> tempWeights = [];
-                    foreach (Configuration.MoonTypeMapping mapping in mappings.Where(x => level.name.ToLower().StartsWith(x.moon)))
+                    foreach (Configuration.MoonTypeMapping mapping in mappings.Where(x => level.name.ToLower().StartsWith(x.moon) || x.moon == "ALL"))
                     {
                         tempWeights.Add(new()
                         {

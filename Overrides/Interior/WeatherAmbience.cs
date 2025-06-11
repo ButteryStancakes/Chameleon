@@ -51,7 +51,10 @@ namespace Chameleon.Overrides.Interior
                     if (blizzard && (rainInside.clip != null || Common.interior != "Level3Flow"))
                         volume *= 0.85f;
 
-                    if (Common.interior == "Level3Flow" && rainInside.clip != backgroundFlood)
+                    bool mines = Common.interior == "Level3Flow";
+                    bool inDeep = mines && RoundManager.Instance.currentMineshaftElevator != null && GameNetworkManager.Instance.localPlayerController.transform.position.y < RoundManager.Instance.currentMineshaftElevator.elevatorTopPoint.position.y - 10f;
+
+                    if (mines)
                         volume *= 0.7f;
                     else
                         volume *= 0.84f;
@@ -59,6 +62,10 @@ namespace Chameleon.Overrides.Interior
                     if (blizzard)
                     {
                         blizzardInside.volume = volume;
+
+                        if (mines && !inDeep)
+                            blizzardInside.volume *= 1.2f;
+
                         if (!blizzardInside.isPlaying && blizzardInside.clip != null)
                             blizzardInside.Play();
                     }
@@ -66,6 +73,10 @@ namespace Chameleon.Overrides.Interior
                     if (rainInside.clip != null)
                     {
                         rainInside.volume = volume;
+
+                        if (mines && inDeep == (rainInside.clip == backgroundFlood))
+                            rainInside.volume *= 1.2f;
+
                         if (!rainInside.isPlaying)
                             rainInside.Play();
                     }

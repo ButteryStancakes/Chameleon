@@ -5,7 +5,7 @@ namespace Chameleon.Overrides.Exterior
 {
     internal class RockRecolorer
     {
-        static readonly Color ROCK_GRAY = new(0.2358491f, 0.2358491f, 0.2358491f);
+        internal static readonly Color ROCK_GRAY = new(0.2358491f, 0.2358491f, 0.2358491f);
 
         internal static void Apply()
         {
