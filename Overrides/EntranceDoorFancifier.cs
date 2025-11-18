@@ -30,7 +30,7 @@ namespace Chameleon.Overrides
             }
 
             // set up manor doors?
-            if (string.IsNullOrEmpty(Common.interior) || Common.interior != "Level2Flow" && Common.interior != "SDMLevel")
+            if (string.IsNullOrEmpty(Common.interior) || (Common.interior != "Level2Flow" && Common.interior != "SpookyManorFlow" && Common.interior != "SDMLevel" && Common.interior != "AquaticDungeonFlow"))
                 return;
 
             GameObject fakeDoor1 = GameObject.Find(Common.currentLevelCosmeticInfo.fakeDoor1Path);

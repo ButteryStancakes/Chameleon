@@ -13,7 +13,7 @@ namespace Chameleon.Patches
 
         [HarmonyPatch(typeof(ForestGiantAI), nameof(ForestGiantAI.Start))]
         [HarmonyPostfix]
-        static void ForestGiantAIPostStart(ForestGiantAI __instance)
+        static void ForestGiantAI_Post_Start(ForestGiantAI __instance)
         {
             if (Configuration.giantSkins.Value)
             {
@@ -50,7 +50,7 @@ namespace Chameleon.Patches
 
         [HarmonyPatch(typeof(EnemyAI), nameof(EnemyAI.SwitchToBehaviourStateOnLocalClient))]
         [HarmonyPostfix]
-        static void PostSwitchToBehaviourStateOnLocalClient(EnemyAI __instance, int stateIndex)
+        static void EnemyAI_Post_SwitchToBehaviourStateOnLocalClient(EnemyAI __instance, int stateIndex)
         {
             if (stateIndex == 2 && __instance is ForestGiantAI && Configuration.giantSkins.Value && Queries.IsSnowLevel() && giantNormal != null)
             {
@@ -63,7 +63,7 @@ namespace Chameleon.Patches
 
         [HarmonyPatch(typeof(ForestGiantAI), nameof(ForestGiantAI.KillEnemy))]
         [HarmonyPostfix]
-        static void ForestGiantAIPostKillEnemy(ForestGiantAI __instance, float ___timeAtStartOfBurning)
+        static void ForestGiantAI_Post_KillEnemy(ForestGiantAI __instance, float ___timeAtStartOfBurning)
         {
             if (Configuration.giantSkins.Value && giantBurnt != null && ___timeAtStartOfBurning > 0f)
             {

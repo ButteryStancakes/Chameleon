@@ -14,7 +14,7 @@ namespace Chameleon.Overrides.Interior
 
         internal static void Apply()
         {
-            if (string.IsNullOrEmpty(Common.interior) || Common.interior != "Level3Flow")
+            if (string.IsNullOrEmpty(Common.interior) || !Queries.IsMineshaft())
                 return;
 
             if (Common.dungeonRoot == null)
@@ -34,28 +34,31 @@ namespace Chameleon.Overrides.Interior
                 return;
             }
 
-            if (!string.IsNullOrEmpty(currentCavernInfo.tag) && currentCavernInfo.tag != "Rock" && !Common.INSTALLED_BUTTERY_FIXES)
+            if (!string.IsNullOrEmpty(currentCavernInfo.tag) && currentCavernInfo.tag != "Rock" && !Common.CAN_REPLACE_CAVE_TAGS)
                 Plugin.Logger.LogWarning("A cavern type with custom footsteps has been selected, but Buttery Fixes is not installed - Footstep changes are not supported!");
 
-            string assets = type.ToString().ToLower() + "cave";
             Material caveRocks = null, coalMat = null, smallRocks = null;
-            try
+            if (!currentCavernInfo.noRockMat)
             {
-                AssetBundle assetBundle = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), assets));
-                caveRocks = assetBundle.LoadAsset<Material>("CaveRocks1");
-                coalMat = assetBundle.LoadAsset<Material>("CoalMat");
-                if (!string.IsNullOrEmpty(currentCavernInfo.smallRockMat))
-                    smallRocks = assetBundle.LoadAsset<Material>(currentCavernInfo.smallRockMat);
-                assetBundle.Unload(false);
-            }
-            catch
-            {
-                Plugin.Logger.LogError($"Encountered some error loading assets from bundle \"{assets}\". Did you install the plugin correctly?");
-            }
-            if (caveRocks == null && !currentCavernInfo.noRockMat)
-            {
-                Plugin.Logger.LogWarning("Skipping mineshaft retexture because there was an error loading the replacement material.");
-                return;
+                string assets = type.ToString().ToLower() + "cave";
+                try
+                {
+                    AssetBundle assetBundle = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), assets));
+                    caveRocks = assetBundle.LoadAsset<Material>("CaveRocks1");
+                    coalMat = assetBundle.LoadAsset<Material>("CoalMat");
+                    if (!string.IsNullOrEmpty(currentCavernInfo.smallRockMat))
+                        smallRocks = assetBundle.LoadAsset<Material>(currentCavernInfo.smallRockMat);
+                    assetBundle.Unload(false);
+                }
+                catch
+                {
+                    Plugin.Logger.LogError($"Encountered some error loading assets from bundle \"{assets}\". Did you install the plugin correctly?");
+                }
+                if (caveRocks == null)
+                {
+                    Plugin.Logger.LogWarning("Skipping mineshaft retexture because there was an error loading the replacement material.");
+                    return;
+                }
             }
 
             foreach (Renderer rend in Common.dungeonRoot.GetComponentsInChildren<Renderer>())
@@ -80,7 +83,7 @@ namespace Chameleon.Overrides.Interior
                         else
                             AdjustRockMaterial(rend.material, currentCavernInfo);
 
-                        if (rend.CompareTag("Rock") && !string.IsNullOrEmpty(currentCavernInfo.tag) && Common.INSTALLED_BUTTERY_FIXES)
+                        if (rend.CompareTag("Rock") && !string.IsNullOrEmpty(currentCavernInfo.tag) && Common.CAN_REPLACE_CAVE_TAGS)
                             rend.tag = currentCavernInfo.tag;
                     }
                     else if (currentCavernInfo.waterColor && rend.name == "Water (1)" && rend.sharedMaterial.name.StartsWith("CaveWater"))
@@ -111,7 +114,7 @@ namespace Chameleon.Overrides.Interior
             if (Configuration.autoAdaptSnow.Value && Queries.IsSnowLevel() && (StartOfRound.Instance.currentLevel.name == "ArtificeLevel" || !VanillaLevelsInfo.predefinedLevels.ContainsKey(StartOfRound.Instance.currentLevel.name)))
             {
                 Plugin.Logger.LogDebug("Snow level detected, automatically enabling white caverns");
-                return Common.INSTALLED_BUTTERY_FIXES ? CavernType.Ice : CavernType.Salt;
+                return Common.CAN_REPLACE_CAVE_TAGS ? CavernType.Ice : CavernType.Salt;
             }
 
             if (cavernWeightLists.TryGetValue(StartOfRound.Instance.currentLevel.name, out IntWithRarity[] mineshaftWeightList))

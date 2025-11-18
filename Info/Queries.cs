@@ -17,5 +17,10 @@
 
             return GameNetworkManager.Instance.localPlayerController.spectatedPlayerScript != null && GameNetworkManager.Instance.localPlayerController.spectatedPlayerScript.isInsideFactory;
         }
+
+        internal static bool IsMineshaft()
+        {
+            return Common.interior == "Level3Flow" || Common.interior == "Level3ButCoolFlow";
+        }
     }
 }

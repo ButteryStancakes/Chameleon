@@ -15,9 +15,9 @@ namespace Chameleon.Patches
         static Light sunlight;
         static Material artificeMat, embrionMat;
 
-        [HarmonyPatch(typeof(StartOfRound), "Awake")]
+        [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.Awake))]
         [HarmonyPostfix]
-        static void StartOfRoundPostAwake(StartOfRound __instance)
+        static void StartOfRound_Post_Awake(StartOfRound __instance)
         {
             if (Configuration.planetPreview.Value && __instance.outerSpaceSunAnimator != null)
             {
@@ -58,7 +58,7 @@ namespace Chameleon.Patches
 
         [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.LateUpdate))]
         [HarmonyPostfix]
-        static void StartOfRoundPostLateUpdate(StartOfRound __instance)
+        static void StartOfRound_Post_LateUpdate(StartOfRound __instance)
         {
             if (__instance.firingPlayersCutsceneRunning && sunlight != null && shipAnimator != null && shipAnimator.GetBool("AlarmRinging"))
                 sunlight.enabled = false;
@@ -66,7 +66,7 @@ namespace Chameleon.Patches
 
         [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.EndPlayersFiredSequenceClientRpc))]
         [HarmonyPostfix]
-        static void PostEndPlayersFiredSequenceClientRpc(StartOfRound __instance)
+        static void StartOfRound_Post_EndPlayersFiredSequenceClientRpc(StartOfRound __instance)
         {
             if (sunlight != null)
                 sunlight.enabled = true;
@@ -74,7 +74,7 @@ namespace Chameleon.Patches
 
         [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.ChangePlanet))]
         [HarmonyPostfix]
-        static void PostChangePlanet(StartOfRound __instance)
+        static void StartOfRound_Post_ChangePlanet(StartOfRound __instance)
         {
             if (sunlight != null && __instance.currentPlanetPrefab != null)
             {

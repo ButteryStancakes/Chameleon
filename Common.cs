@@ -11,7 +11,7 @@ namespace Chameleon
 {
     internal class Common
     {
-        internal static bool INSTALLED_ARTIFICE_BLIZZARD, INSTALLED_BUTTERY_FIXES;
+        internal static bool INSTALLED_ARTIFICE_BLIZZARD, CAN_REPLACE_CAVE_TAGS;
 
         // * ----- REFERENCES ----- *
 

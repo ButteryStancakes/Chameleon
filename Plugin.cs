@@ -11,14 +11,16 @@ namespace Chameleon
     [BepInDependency(GUID_ARTIFICE_BLIZZARD, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(GUID_LOBBY_COMPATIBILITY, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(GUID_BUTTERY_FIXES, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(GUID_NO_LOST_SIGNAL, BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
-        internal const string PLUGIN_GUID = "butterystancakes.lethalcompany.chameleon", PLUGIN_NAME = "Chameleon", PLUGIN_VERSION = "2.2.0";
+        internal const string PLUGIN_GUID = "butterystancakes.lethalcompany.chameleon", PLUGIN_NAME = "Chameleon", PLUGIN_VERSION = "2.2.1";
         internal static new ManualLogSource Logger;
 
         const string GUID_ARTIFICE_BLIZZARD = "butterystancakes.lethalcompany.artificeblizzard";
         const string GUID_LOBBY_COMPATIBILITY = "BMX.LobbyCompatibility";
         const string GUID_BUTTERY_FIXES = "butterystancakes.lethalcompany.butteryfixes";
+        const string GUID_NO_LOST_SIGNAL = "Tomatobird.NoLostSignal";
 
         void Awake()
         {
@@ -38,8 +40,13 @@ namespace Chameleon
 
             if (Chainloader.PluginInfos.ContainsKey(GUID_BUTTERY_FIXES))
             {
-                Common.INSTALLED_BUTTERY_FIXES = true;
+                Common.CAN_REPLACE_CAVE_TAGS = true;
                 Logger.LogInfo("CROSS-COMPATIBILITY - Buttery Fixes detected");
+            }
+            else if (Chainloader.PluginInfos.ContainsKey(GUID_NO_LOST_SIGNAL))
+            {
+                Common.CAN_REPLACE_CAVE_TAGS = true;
+                Logger.LogInfo("CROSS-COMPATIBILITY - NoLostSignal detected");
             }
 
             Configuration.Init(Config);

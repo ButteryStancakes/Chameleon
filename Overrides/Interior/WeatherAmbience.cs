@@ -48,10 +48,10 @@ namespace Chameleon.Overrides.Interior
                     bool blizzard = Queries.IsSnowLevel();
                     float volume = Configuration.weatherAmbience.Value;
 
-                    if (blizzard && (rainInside.clip != null || Common.interior != "Level3Flow"))
+                    if (blizzard && (rainInside.clip != null || Queries.IsMineshaft()))
                         volume *= 0.85f;
 
-                    bool mines = Common.interior == "Level3Flow";
+                    bool mines = Queries.IsMineshaft();
                     bool inDeep = mines && RoundManager.Instance.currentMineshaftElevator != null && GameNetworkManager.Instance.localPlayerController.transform.position.y < RoundManager.Instance.currentMineshaftElevator.elevatorTopPoint.position.y - 10f;
 
                     if (mines)

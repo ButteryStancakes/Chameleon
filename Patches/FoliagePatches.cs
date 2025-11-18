@@ -8,9 +8,9 @@ namespace Chameleon.Patches
     [HarmonyPatch]
     class FoliagePatches
     {
-        [HarmonyPatch(typeof(FoliageDetailDistance), "Start")]
+        [HarmonyPatch(typeof(FoliageDetailDistance), nameof(FoliageDetailDistance.Start))]
         [HarmonyPostfix]
-        static void FoliageDetailDistancePostStart(FoliageDetailDistance __instance)
+        static void FoliageDetailDistance_Post_Start(FoliageDetailDistance __instance)
         {
             if (Configuration.fancyFoliage.Value && __instance.allBushRenderers.Count > 0)
             {
@@ -20,9 +20,9 @@ namespace Chameleon.Patches
             }
         }
 
-        [HarmonyPatch(typeof(MoldSpreadManager), "Start")]
+        [HarmonyPatch(typeof(MoldSpreadManager), nameof(MoldSpreadManager.Start))]
         [HarmonyPostfix]
-        static void MoldSpreadManagerPostStart(MoldSpreadManager __instance)
+        static void MoldSpreadManager_Post_Start(MoldSpreadManager __instance)
         {
             if (Configuration.fancyShrouds.Value)
                 FoliageDiffuser.ApplyToRenderers(__instance.moldPrefab.GetComponentsInChildren<Renderer>().Where(rend => rend.gameObject.layer != 22));
