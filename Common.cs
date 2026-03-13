@@ -66,6 +66,16 @@ namespace Chameleon
                 if (level.name != "CompanyBuildingLevel")
                     Plugin.Logger.LogInfo($"\"{level.name}\"");
             }
+            RoundManager roundManager = RoundManager.Instance ?? Object.FindAnyObjectByType<RoundManager>();
+            if (roundManager != null)
+            {
+                Plugin.Logger.LogInfo("List of all indexed interiors:");
+                foreach (IndoorMapType indoorMapType in roundManager.dungeonFlowTypes)
+                {
+                    if (indoorMapType.dungeonFlow != null)
+                        Plugin.Logger.LogInfo($"\"{indoorMapType.dungeonFlow.name}\"");
+                }
+            }
 
             Plugin.Logger.LogDebug("Now assembling final weighted lists");
             AssembleWeightedList<CavernType>(ref RetextureCaverns.cavernWeightLists, ref Configuration.cavernMappings);

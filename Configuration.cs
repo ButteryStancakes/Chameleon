@@ -30,10 +30,11 @@ namespace Chameleon
 
         static ConfigFile configFile;
 
-        internal static ConfigEntry<bool> fancyEntranceDoors, recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, giantSkins, fixDoorMeshes, fancyFoliage, fancyShrouds, fogReprojection, fixTitanVolume, fixArtificeVolume, blackoutWindows, reworkFoggyWeather;
+        internal static ConfigEntry<bool> recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, giantSkins, fixDoorMeshes, fancyFoliage, fancyShrouds, fogReprojection, fixTitanVolume, fixArtificeVolume, blackoutWindows, reworkFoggyWeather;
         internal static ConfigEntry<GordionStorms> stormyGordion;
         internal static ConfigEntry<FogQuality> fogQuality;
         internal static ConfigEntry<float> weatherAmbience;
+        internal static ConfigEntry<string> fancyEntrances;
 
         internal static List<MoonTypeMapping> cavernMappings = [], windowMappings = [];
 
@@ -94,11 +95,11 @@ namespace Chameleon
 
         static void ExteriorConfig()
         {
-            fancyEntranceDoors = configFile.Bind(
+            fancyEntrances = configFile.Bind(
                 "Exterior",
-                "FancyEntranceDoors",
-                true,
-                "Changes the front doors to match how they look on the inside when a manor interior generates. (Works for ONLY vanilla levels!)");
+                "FancyEntrances",
+                "Level2Flow,sdmFoyer,sdmBasement,SpookyManorFlow,AquaticDungeonFlow,MuseumInteriorFlow,CabinDungeonFlow,v62Mansion-Level2Flow",
+                "Changes the front doors to match the manor entrance's doors when one of these interiors generates. Works for ONLY vanilla moons! Leave empty to disable.\nUpon hosting a lobby, the full list of interior names will be printed in the debug log, which you can use as a guide.");
 
             recolorRandomRocks = configFile.Bind(
                 "Exterior",
@@ -256,12 +257,12 @@ namespace Chameleon
 
         static void InteriorMineshaftConfig()
         {
-            PopulateCavernsList(CavernType.Vanilla, "Vow:100,March:100,Adamance:100,Artifice:87");
+            PopulateCavernsList(CavernType.Vanilla, "Vow:100,March:100,Adamance:100,Artifice:100");
             PopulateCavernsList(CavernType.Mesa, "Experimentation:100,Titan:100");
             PopulateCavernsList(CavernType.Desert, "Assurance:100,Offense:100");
             PopulateCavernsList(CavernType.Ice, "Rend:100,Dine:100");
             PopulateCavernsList(CavernType.Amethyst, "Embrion:100");
-            PopulateCavernsList(CavernType.Gravel, "Artifice:13");
+            PopulateCavernsList(CavernType.Gravel, string.Empty);
             PopulateCavernsList(CavernType.Salt, string.Empty);
             PopulateCavernsList(CavernType.Slate, string.Empty);
 
@@ -353,6 +354,9 @@ namespace Chameleon
 
             configFile.Bind("Interior.Manor", "WindowVariants", true, "Legacy setting, doesn't work");
             configFile.Remove(configFile["Interior.Manor", "WindowVariants"].Definition);
+
+            configFile.Bind("Exterior", "FancyEntranceDoors", true, "Legacy setting, doesn't work");
+            configFile.Remove(configFile["Exterior", "FancyEntranceDoors"].Definition);
 
             configFile.Save();
         }

@@ -40,7 +40,7 @@ namespace Chameleon.Overrides.Exterior
                 if (totalScrap > TimeOfDay.Instance.profitQuota - 75 && !StartOfRound.Instance.levels.Any(level => level.currentWeather != LevelWeatherType.None))
                     chance *= 0.64f;
 
-                if (new System.Random(StartOfRound.Instance.randomMapSeed).NextDouble() <= chance)
+                if (new System.Random(StartOfRound.Instance.randomMapSeed).NextDouble() < chance)
                     Enabled = true;
             }
 

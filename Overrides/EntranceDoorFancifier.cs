@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
@@ -8,12 +9,12 @@ namespace Chameleon.Overrides
     {
         internal static void Apply()
         {
-            if (!Configuration.fancyEntranceDoors.Value || StartOfRound.Instance.currentLevel.name == "CompanyBuildingLevel" || Common.currentLevelCosmeticInfo == null)
+            if (string.IsNullOrEmpty(Configuration.fancyEntrances.Value) || StartOfRound.Instance.currentLevel.name == "CompanyBuildingLevel" || Common.currentLevelCosmeticInfo == null)
                 return;
 
+            Transform plane = GameObject.Find(Common.currentLevelCosmeticInfo.planePath)?.transform;
             if (!string.IsNullOrEmpty(Common.currentLevelCosmeticInfo.planePath))
             {
-                Transform plane = GameObject.Find(Common.currentLevelCosmeticInfo.planePath)?.transform;
                 if (plane != null)
                 {
                     // fix "darkness plane" not covering the entire doorframe
@@ -30,8 +31,20 @@ namespace Chameleon.Overrides
             }
 
             // set up manor doors?
-            if (string.IsNullOrEmpty(Common.interior) || (Common.interior != "Level2Flow" && Common.interior != "SpookyManorFlow" && Common.interior != "SDMLevel" && Common.interior != "AquaticDungeonFlow"))
+            if (string.IsNullOrEmpty(Common.interior))
                 return;
+
+            try
+            {
+                if (!Configuration.fancyEntrances.Value.Split(',').Contains(Common.interior))
+                    return;
+            }
+            catch
+            {
+                Plugin.Logger.LogError($"Encountered an error parsing the \"FancyEntrances\" setting. Please double check that your config follows proper syntax, then start another round.");
+                if (Common.interior != "Level2Flow")
+                    return;
+            }
 
             GameObject fakeDoor1 = GameObject.Find(Common.currentLevelCosmeticInfo.fakeDoor1Path);
             GameObject fakeDoor2 = GameObject.Find(Common.currentLevelCosmeticInfo.fakeDoor2Path);
@@ -39,7 +52,7 @@ namespace Chameleon.Overrides
 
             if (fakeDoor1 == null || fakeDoor2 == null || !string.IsNullOrEmpty(Common.currentLevelCosmeticInfo.framePath) && frame == null)
             {
-                Plugin.Logger.LogWarning("\"FancyEntranceDoors\" skipped because some GameObjects were missing.");
+                Plugin.Logger.LogWarning("\"FancyEntrances\" skipped because some GameObjects were missing.");
                 return;
             }
 
@@ -57,7 +70,7 @@ namespace Chameleon.Overrides
             }
             if (fancyDoors == null)
             {
-                Plugin.Logger.LogWarning("\"FancyEntranceDoors\" skipped because fancy door asset was missing.");
+                Plugin.Logger.LogWarning("\"FancyEntrances\" skipped because fancy door asset was missing.");
                 return;
             }
 
@@ -65,7 +78,7 @@ namespace Chameleon.Overrides
                 RoundManager.Instance.mapPropsContainer = GameObject.FindGameObjectWithTag("MapPropsContainer");
             if (RoundManager.Instance.mapPropsContainer == null)
             {
-                Plugin.Logger.LogWarning("\"FancyEntranceDoors\" skipped because disposable prop container did not exist in scene.");
+                Plugin.Logger.LogWarning("\"FancyEntrances\" skipped because disposable prop container did not exist in scene.");
                 return;
             }
 
@@ -77,7 +90,17 @@ namespace Chameleon.Overrides
                 fancyDoorsClone.localScale = Vector3.Scale(fancyDoorsClone.localScale, Common.currentLevelCosmeticInfo.fancyDoorScalar);
 
             if (frame != null)
-                frame.localScale = new Vector3(frame.localScale.x, frame.localScale.y + 0.05f, frame.localScale.z);
+            {
+                //frame.localScale = new Vector3(frame.localScale.x, frame.localScale.y + 0.05f, frame.localScale.z);
+                frame.gameObject.SetActive(false);
+                if (plane != null)
+                    plane.gameObject.SetActive(false);
+            }
+            else if (fancyDoorsClone.TryGetComponent(out Renderer fancyDoorFrame))
+            {
+                fancyDoorFrame.forceRenderingOff = true;
+                fancyDoorFrame.enabled = false;
+            }
         }
     }
 }
