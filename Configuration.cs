@@ -30,7 +30,7 @@ namespace Chameleon
 
         static ConfigFile configFile;
 
-        internal static ConfigEntry<bool> recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, giantSkins, fixDoorMeshes, fancyFoliage, fancyShrouds, fogReprojection, fixTitanVolume, fixArtificeVolume, blackoutWindows, reworkFoggyWeather;
+        internal static ConfigEntry<bool> recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, giantSkins, fixDoorMeshes, fancyFoliage, fancyShrouds, fogReprojection, fixTitanVolume, fixArtificeVolume, blackoutWindows, reworkFoggyWeather, dontChangeCaveSteps;
         internal static ConfigEntry<GordionStorms> stormyGordion;
         internal static ConfigEntry<FogQuality> fogQuality;
         internal static ConfigEntry<float> weatherAmbience;
@@ -271,6 +271,12 @@ namespace Chameleon
                 "AutoAdaptSnow",
                 false,
                 "Automatically enable ice (or salt, without Buttery Fixes) caverns on modded levels that are snowy.\nIf you have Artifice Blizzard installed, this will also change the caverns specifically only when the blizzard is active.");
+
+            dontChangeCaveSteps = configFile.Bind(
+                "Interior.Mineshaft",
+                "DontChangeCaveSteps",
+                false,
+                "All variants of the cave use vanilla's footstep sounds and effects. This is basically identical to the behavior of the mod if you don't have Buttery Fixes installed.");
         }
 
         static void PopulateCavernsList(CavernType type, string defaultList)

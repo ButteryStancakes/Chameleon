@@ -34,7 +34,7 @@ namespace Chameleon.Overrides.Interior
                 return;
             }
 
-            if (!string.IsNullOrEmpty(currentCavernInfo.tag) && currentCavernInfo.tag != "Rock" && !Common.CAN_REPLACE_CAVE_TAGS)
+            if (!string.IsNullOrEmpty(currentCavernInfo.tag) && currentCavernInfo.tag != "Rock" && !Common.CAN_REPLACE_CAVE_TAGS && !Configuration.dontChangeCaveSteps.Value)
                 Plugin.Logger.LogWarning("A cavern type with custom footsteps has been selected, but Buttery Fixes is not installed - Footstep changes are not supported!");
 
             Material caveRocks = null, coalMat = null, smallRocks = null;
@@ -83,7 +83,7 @@ namespace Chameleon.Overrides.Interior
                         else
                             AdjustRockMaterial(rend.material, currentCavernInfo);
 
-                        if (rend.CompareTag("Rock") && !string.IsNullOrEmpty(currentCavernInfo.tag) && Common.CAN_REPLACE_CAVE_TAGS)
+                        if (rend.CompareTag("Rock") && !string.IsNullOrEmpty(currentCavernInfo.tag) && Common.CAN_REPLACE_CAVE_TAGS && !Configuration.dontChangeCaveSteps.Value)
                             rend.tag = currentCavernInfo.tag;
                     }
                     else if (currentCavernInfo.waterColor && rend.name == "Water (1)" && rend.sharedMaterial.name.StartsWith("CaveWater"))
@@ -114,7 +114,7 @@ namespace Chameleon.Overrides.Interior
             if (Configuration.autoAdaptSnow.Value && Queries.IsSnowLevel() && (StartOfRound.Instance.currentLevel.name == "ArtificeLevel" || !VanillaLevelsInfo.predefinedLevels.ContainsKey(StartOfRound.Instance.currentLevel.name)))
             {
                 Plugin.Logger.LogDebug("Snow level detected, automatically enabling white caverns");
-                return Common.CAN_REPLACE_CAVE_TAGS ? CavernType.Ice : CavernType.Salt;
+                return (Common.CAN_REPLACE_CAVE_TAGS || Configuration.dontChangeCaveSteps.Value) ? CavernType.Ice : CavernType.Salt;
             }
 
             if (cavernWeightLists.TryGetValue(StartOfRound.Instance.currentLevel.name, out IntWithRarity[] mineshaftWeightList))
