@@ -25,7 +25,7 @@ namespace Chameleon.Overrides.Interior
         // accounting for all the v70 changes has turned this into an ugly, ugly beast, and I am no longer proud to be its mother
         internal static void Apply()
         {
-            if (string.IsNullOrEmpty(Common.interior) || Common.interior != "Level2Flow")
+            if (string.IsNullOrEmpty(Common.interior) || (Common.interior != "Level2Flow" && Common.interior != "v62Mansion-Level2Flow"))
                 return;
 
             if (Common.dungeonRoot == null)
