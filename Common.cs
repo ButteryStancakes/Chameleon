@@ -96,11 +96,7 @@ namespace Chameleon
                     List<IntWithRarity> tempWeights = [];
                     foreach (Configuration.MoonTypeMapping mapping in mappings.Where(x => level.name.ToLower().StartsWith(x.moon) || x.moon == "ALL"))
                     {
-                        tempWeights.Add(new()
-                        {
-                            id = mapping.type,
-                            rarity = mapping.weight
-                        });
+                        tempWeights.Add(new(mapping.type, mapping.weight, null));
                         Plugin.Logger.LogDebug($"{level.name} - {(T)(object)mapping.type} @ {mapping.weight}");
                     }
                     if (tempWeights.Count > 0)

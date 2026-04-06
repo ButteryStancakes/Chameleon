@@ -10,6 +10,8 @@ namespace Chameleon.Overrides.Interior
 {
     internal class RetextureCaverns
     {
+        internal static CavernType Type { get; private set; }
+
         internal static Dictionary<string, IntWithRarity[]> cavernWeightLists = [];
 
         internal static void Apply()
@@ -23,11 +25,13 @@ namespace Chameleon.Overrides.Interior
                 return;
             }
 
-            CavernType type = GetCurrentMoonCaverns();
-            if (type == CavernType.Vanilla)
+            Type = GetCurrentMoonCaverns();
+            if (Type == CavernType.Vanilla)
                 return;
 
-            VanillaLevelsInfo.predefinedCaverns.TryGetValue(type, out CavernInfo currentCavernInfo);
+            SceneOverrides.resetOverrides += Reset;
+
+            VanillaLevelsInfo.predefinedCaverns.TryGetValue(Type, out CavernInfo currentCavernInfo);
             if (currentCavernInfo == null)
             {
                 Plugin.Logger.LogWarning("Skipping mineshaft retexture because there was an error finding cavern specifications.");
@@ -40,7 +44,7 @@ namespace Chameleon.Overrides.Interior
             Material caveRocks = null, coalMat = null, smallRocks = null;
             if (!currentCavernInfo.noRockMat)
             {
-                string assets = type.ToString().ToLower() + "cave";
+                string assets = Type.ToString().ToLower() + "cave";
                 try
                 {
                     AssetBundle assetBundle = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), assets));
@@ -150,6 +154,12 @@ namespace Chameleon.Overrides.Interior
             mat.SetTexture("_MainTex", null);
             mat.SetTexture("_BaseColorMap", null);
             mat.SetFloat("_NormalScale", info.rockNormals);
+        }
+
+        static void Reset()
+        {
+            SceneOverrides.resetOverrides -= Reset;
+            Type = CavernType.Vanilla;
         }
     }
 }

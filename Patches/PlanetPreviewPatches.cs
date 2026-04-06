@@ -1,15 +1,12 @@
 ﻿using HarmonyLib;
 using System.IO;
 using System.Reflection;
-
-
-//using System.Linq;
 using UnityEngine;
 
 namespace Chameleon.Patches
 {
     [HarmonyPatch]
-    internal class PlanetPreviewPatches
+    static class PlanetPreviewPatches
     {
         static Animator shipAnimator;
         static Light sunlight;
@@ -29,15 +26,6 @@ namespace Chameleon.Patches
                     sunlight.enabled = true;
                     shipAnimator = __instance.shipAnimatorObject.GetComponent<Animator>();
                 }
-
-                // artifice is snowy by default
-                /*if (!Common.INSTALLED_ARTIFICE_BLIZZARD)
-                {
-                    GameObject moon2 = __instance.levels.FirstOrDefault(level => level.planetPrefab != null && level.planetPrefab.name.StartsWith("Moon2")).planetPrefab;
-                    SelectableLevel artifice = __instance.levels.FirstOrDefault(level => level.name == "ArtificeLevel");
-                    if (moon2 != null && artifice != null)
-                        artifice.planetPrefab = moon2;
-                }*/
 
                 if (artificeMat == null || embrionMat == null)
                 {

@@ -28,8 +28,6 @@ namespace Chameleon.Overrides
             applyOverrides += FakeRain.Apply;
             applyOverrides += WeatherAmbience.Apply;
 
-            applyOverrides += RockRecolorer.Apply;
-            applyOverrides += ReworkFoggy.Apply;
             applyOverrides += DoorLightColorer.Apply;
             applyOverrides += RetextureCaverns.Apply;
             applyOverrides += ManorWindows.Apply;

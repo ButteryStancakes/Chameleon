@@ -11,7 +11,7 @@ namespace Chameleon.Overrides.Interior
 
         internal static void Apply()
         {
-            if (!Configuration.doorLightColors.Value || string.IsNullOrEmpty(Common.interior) || Common.interior == "Level2Flow")
+            if (!Configuration.doorLightColors.Value || string.IsNullOrEmpty(Common.interior))
                 return;
 
             lightBehindDoor = Object.FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None).FirstOrDefault(spriteRenderer => spriteRenderer.name == "LightBehindDoor");
@@ -21,12 +21,10 @@ namespace Chameleon.Overrides.Interior
                     doorLightColor = DoorLightPalette.ECLIPSE_BACKGROUND;
                 else if (StartOfRound.Instance.currentLevel.currentWeather == LevelWeatherType.Stormy || StartOfRound.Instance.currentLevel.currentWeather == LevelWeatherType.Flooded)
                     doorLightColor = DoorLightPalette.CLOUDY_BACKGROUND;
-                else if (StartOfRound.Instance.currentLevel.currentWeather == LevelWeatherType.Foggy)
-                    doorLightColor = DoorLightPalette.FOGGY_BACKGROUND;
+                else if (Common.currentLevelCosmeticInfo != null)
+                    doorLightColor = StartOfRound.Instance.currentLevel.currentWeather == LevelWeatherType.Foggy ? Common.currentLevelCosmeticInfo.doorLightColorFoggy : Common.currentLevelCosmeticInfo.doorLightColor;
                 else if (Queries.IsSnowLevel())
                     doorLightColor = DoorLightPalette.BLIZZARD_BACKGROUND;
-                else if (Common.currentLevelCosmeticInfo != null)
-                    doorLightColor = Common.currentLevelCosmeticInfo.doorLightColor;
                 else
                 {
                     Plugin.Logger.LogDebug("Could not recolor door light - No information exists for the current level (Are you playing a custom moon?)");

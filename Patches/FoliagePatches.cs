@@ -6,7 +6,7 @@ using UnityEngine;
 namespace Chameleon.Patches
 {
     [HarmonyPatch]
-    class FoliagePatches
+    static class FoliagePatches
     {
         [HarmonyPatch(typeof(FoliageDetailDistance), nameof(FoliageDetailDistance.Start))]
         [HarmonyPostfix]
@@ -18,14 +18,6 @@ namespace Chameleon.Patches
                 FoliageDiffuser.ApplyToRenderers([__instance.allBushRenderers[0]]);
                 __instance.highDetailMaterial = __instance.allBushRenderers[0].sharedMaterial;
             }
-        }
-
-        [HarmonyPatch(typeof(MoldSpreadManager), nameof(MoldSpreadManager.Start))]
-        [HarmonyPostfix]
-        static void MoldSpreadManager_Post_Start(MoldSpreadManager __instance)
-        {
-            if (Configuration.fancyShrouds.Value)
-                FoliageDiffuser.ApplyToRenderers(__instance.moldPrefab.GetComponentsInChildren<Renderer>().Where(rend => rend.gameObject.layer != 22));
         }
     }
 }

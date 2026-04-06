@@ -30,7 +30,7 @@ namespace Chameleon
 
         static ConfigFile configFile;
 
-        internal static ConfigEntry<bool> recolorRandomRocks, doorLightColors, rainyMarch, eclipsesBlockMusic, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, giantSkins, fixDoorMeshes, fancyFoliage, fancyShrouds, fogReprojection, fixTitanVolume, fixArtificeVolume, blackoutWindows, reworkFoggyWeather, dontChangeCaveSteps;
+        internal static ConfigEntry<bool> doorLightColors, rainyMarch, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, giantSkins, fixDoorMeshes, fancyFoliage, fogReprojection, fixTitanVolume, fixArtificeVolume, blackoutWindows, dontChangeCaveSteps, snowyCadavers;
         internal static ConfigEntry<GordionStorms> stormyGordion;
         internal static ConfigEntry<FogQuality> fogQuality;
         internal static ConfigEntry<float> weatherAmbience;
@@ -61,12 +61,6 @@ namespace Chameleon
                 "FancyFoliage",
                 true,
                 "Light passes and spreads through the foliage for nicer visuals. Performance impact is negligible.");
-
-            fancyShrouds = configFile.Bind(
-                "Rendering",
-                "FancyShrouds",
-                true,
-                "Applies FancyFoliage's changes to Vain Shrouds as well. (Really puts the \"vain\" in Vain Shrouds.)");
 
             fogQuality = configFile.Bind(
                 "Rendering",
@@ -101,12 +95,6 @@ namespace Chameleon
                 "Level2Flow,sdmFoyer,sdmBasement,SpookyManorFlow,AquaticDungeonFlow,MuseumInteriorFlow,CabinDungeonFlow,v62Mansion-Level2Flow",
                 "Changes the front doors to match the manor entrance's doors when one of these interiors generates. Works for ONLY vanilla moons! Leave empty to disable.\nUpon hosting a lobby, the full list of interior names will be printed in the debug log, which you can use as a guide.");
 
-            recolorRandomRocks = configFile.Bind(
-                "Exterior",
-                "RecolorRandomRocks",
-                true,
-                "Recolors the randomly spawning sandstone boulders to blend in better with different types of moons.");
-
             rainyMarch = configFile.Bind(
                 "Exterior",
                 "RainyMarch",
@@ -118,18 +106,6 @@ namespace Chameleon
                 "StormyGordion",
                 GordionStorms.Chance,
                 "Allows for storms on Gordion, as described in its terminal page. This is purely visual and lightning does not strike at The Company.");
-
-            eclipsesBlockMusic = configFile.Bind(
-                "Exterior",
-                "EclipsesBlockMusic",
-                true,
-                "Prevents the morning/afternoon ambience music from playing during Eclipsed weather, which has its own ambient track.");
-
-            reworkFoggyWeather = configFile.Bind(
-                "Exterior",
-                "ReworkFoggyWeather",
-                true,
-                "(Vanilla moons only) Change the visuals of foggy weather to better fit the visuals of the moon itself.");
 
             giantSkins = configFile.Bind(
                 "Exterior",
@@ -277,6 +253,12 @@ namespace Chameleon
                 "DontChangeCaveSteps",
                 false,
                 "All variants of the cave use vanilla's footstep sounds and effects. This is basically identical to the behavior of the mod if you don't have Buttery Fixes installed.");
+
+            snowyCadavers = configFile.Bind(
+                "Interior.Mineshaft",
+                "SnowyCadavers",
+                true,
+                "Cadavers will appear with a unique frostbitten appearance in ice caverns.");
         }
 
         static void PopulateCavernsList(CavernType type, string defaultList)
@@ -339,13 +321,10 @@ namespace Chameleon
                 configFile.Remove(configFile["Exterior", "FancyFoliage"].Definition);
             }
 
-            if (fancyShrouds.Value)
-            {
-                if (!configFile.Bind("Exterior", "FancyShrouds", true, "Legacy setting, doesn't work").Value)
-                    fancyShrouds.Value = false;
-
-                configFile.Remove(configFile["Exterior", "FancyShrouds"].Definition);
-            }
+            configFile.Bind("Exterior", "FancyShrouds", true, "Legacy setting, doesn't work");
+            configFile.Remove(configFile["Exterior", "FancyShrouds"].Definition);
+            configFile.Bind("Rendering", "FancyShrouds", true, "Legacy setting, doesn't work");
+            configFile.Remove(configFile["Rendering", "FancyShrouds"].Definition);
 
             if (giantSkins.Value)
             {
@@ -363,6 +342,15 @@ namespace Chameleon
 
             configFile.Bind("Exterior", "FancyEntranceDoors", true, "Legacy setting, doesn't work");
             configFile.Remove(configFile["Exterior", "FancyEntranceDoors"].Definition);
+
+            configFile.Bind("Exterior", "EclipsesBlockMusic", true, "Legacy setting, doesn't work");
+            configFile.Remove(configFile["Exterior", "EclipsesBlockMusic"].Definition);
+
+            configFile.Bind("Exterior", "ReworkFoggyWeather", true, "Legacy setting, doesn't work");
+            configFile.Remove(configFile["Exterior", "ReworkFoggyWeather"].Definition);
+
+            configFile.Bind("Exterior", "RecolorRandomRocks", true, "Legacy setting, doesn't work");
+            configFile.Remove(configFile["Exterior", "RecolorRandomRocks"].Definition);
 
             configFile.Save();
         }

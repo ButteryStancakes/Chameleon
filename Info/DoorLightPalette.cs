@@ -6,9 +6,6 @@ namespace Chameleon.Info
     {
         internal static readonly Color DEFAULT_BACKGROUND = new(0.490566f, 0.4165709f, 0.3355286f);
 
-        // Vow, March, Adamance
-        internal static readonly Color WITCHES_BACKGROUND = new(0.4901961f, 0.4693464f, 0.3764706f);
-
         // Rend, Dine, Titan
         internal static readonly Color BLIZZARD_BACKGROUND = new(0.4845f, 0.4986666f, 0.51f);
 

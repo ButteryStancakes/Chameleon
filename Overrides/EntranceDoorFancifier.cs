@@ -7,6 +7,8 @@ namespace Chameleon.Overrides
 {
     internal class EntranceDoorFancifier
     {
+        internal static bool Enabled { get; private set; }
+
         internal static void Apply()
         {
             if (string.IsNullOrEmpty(Configuration.fancyEntrances.Value) || StartOfRound.Instance.currentLevel.name == "CompanyBuildingLevel" || Common.currentLevelCosmeticInfo == null)
@@ -17,9 +19,12 @@ namespace Chameleon.Overrides
             {
                 if (plane != null)
                 {
-                    // fix "darkness plane" not covering the entire doorframe
-                    plane.localPosition += Common.currentLevelCosmeticInfo.planeOffset;
-                    plane.localScale = new Vector3(plane.localScale.x + 0.047f, plane.localScale.y, plane.localScale.z + 0.237f);
+                    if (StartOfRound.Instance.currentLevel.sceneName == "Level9Artifice")
+                    {
+                        // fix "darkness plane" not covering the entire doorframe
+                        plane.SetLocalPositionAndRotation(new(67.955864f, 251.948593f, -136.272522f), Quaternion.Euler(-90f, 0f, 155.41f));
+                        plane.localScale = new(0.295510322f, 0.124950044f, 0.305550158f);
+                    }
 
                     // fix shininess
                     if (Common.black != null)
@@ -42,25 +47,27 @@ namespace Chameleon.Overrides
             catch
             {
                 Plugin.Logger.LogError($"Encountered an error parsing the \"FancyEntrances\" setting. Please double check that your config follows proper syntax, then start another round.");
-                if (Common.interior != "Level2Flow")
+                if (RoundManager.Instance.currentDungeonType != 1)
                     return;
             }
 
-            GameObject fakeDoor1 = GameObject.Find(Common.currentLevelCosmeticInfo.fakeDoor1Path);
-            GameObject fakeDoor2 = GameObject.Find(Common.currentLevelCosmeticInfo.fakeDoor2Path);
+            GameObject doorsContainer = GameObject.Find(Common.currentLevelCosmeticInfo.doorsContainerPath);
             Transform frame = string.IsNullOrEmpty(Common.currentLevelCosmeticInfo.framePath) ? null : GameObject.Find(Common.currentLevelCosmeticInfo.framePath)?.transform;
+            Transform fakeDoor1 = doorsContainer.transform.Find("SteelDoorFake/DoorMesh");
+            Transform fakeDoor2 = doorsContainer.transform.Find("SteelDoorFake (1)/DoorMesh");
 
-            if (fakeDoor1 == null || fakeDoor2 == null || !string.IsNullOrEmpty(Common.currentLevelCosmeticInfo.framePath) && frame == null)
+            if (doorsContainer == null || (!string.IsNullOrEmpty(Common.currentLevelCosmeticInfo.framePath) && frame == null) || fakeDoor1 == null || fakeDoor2 == null)
             {
                 Plugin.Logger.LogWarning("\"FancyEntrances\" skipped because some GameObjects were missing.");
                 return;
             }
 
-            GameObject fancyDoors;
+            GameObject fancyDoorframe, fancyDoor;
             try
             {
                 AssetBundle fancyEntranceDoors = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "fancyentrancedoors"));
-                fancyDoors = fancyEntranceDoors.LoadAsset<GameObject>("WideDoorFrame");
+                fancyDoorframe = fancyEntranceDoors.LoadAsset<GameObject>("WideDoorFrame");
+                fancyDoor = fancyEntranceDoors.LoadAsset<GameObject>("DoorMeshFake");
                 fancyEntranceDoors.Unload(false);
             }
             catch
@@ -68,9 +75,9 @@ namespace Chameleon.Overrides
                 Plugin.Logger.LogError("Encountered some error loading assets from bundle \"fancyentrancedoors\". Did you install the plugin correctly?");
                 return;
             }
-            if (fancyDoors == null)
+            if (fancyDoorframe == null || fancyDoor == null)
             {
-                Plugin.Logger.LogWarning("\"FancyEntrances\" skipped because fancy door asset was missing.");
+                Plugin.Logger.LogWarning("\"FancyEntrances\" skipped because fancy door assets were missing.");
                 return;
             }
 
@@ -82,25 +89,26 @@ namespace Chameleon.Overrides
                 return;
             }
 
-            fakeDoor1.SetActive(false);
-            fakeDoor2.SetActive(false);
-
-            Transform fancyDoorsClone = Object.Instantiate(fancyDoors, Common.currentLevelCosmeticInfo.fancyDoorPos, Common.currentLevelCosmeticInfo.fancyDoorRot, RoundManager.Instance.mapPropsContainer.transform).transform;
-            if (Common.currentLevelCosmeticInfo.fancyDoorScalar != Vector3.one)
-                fancyDoorsClone.localScale = Vector3.Scale(fancyDoorsClone.localScale, Common.currentLevelCosmeticInfo.fancyDoorScalar);
-
             if (frame != null)
             {
-                //frame.localScale = new Vector3(frame.localScale.x, frame.localScale.y + 0.05f, frame.localScale.z);
                 frame.gameObject.SetActive(false);
-                if (plane != null)
-                    plane.gameObject.SetActive(false);
+                Transform fancyDoorframeClone = Object.Instantiate(fancyDoorframe, Common.currentLevelCosmeticInfo.fancyDoorPos, Common.currentLevelCosmeticInfo.fancyDoorRot, RoundManager.Instance.mapPropsContainer.transform).transform;
+                if (StartOfRound.Instance.currentLevel.sceneName == "Level6Dine")
+                    fancyDoorframeClone.localScale = new(fancyDoorframeClone.localScale.x, 1f, fancyDoorframeClone.localScale.z);
             }
-            else if (fancyDoorsClone.TryGetComponent(out Renderer fancyDoorFrame))
-            {
-                fancyDoorFrame.forceRenderingOff = true;
-                fancyDoorFrame.enabled = false;
-            }
+            fakeDoor1.gameObject.SetActive(false);
+            Object.Instantiate(fancyDoor, fakeDoor1.parent);
+            fakeDoor2.gameObject.SetActive(false);
+            Object.Instantiate(fancyDoor, fakeDoor2.parent).transform.SetLocalPositionAndRotation(new(0.14f, 0f, 0f), Quaternion.Euler(0f, 0f, -179f));
+
+            Enabled = true;
+            SceneOverrides.resetOverrides += Reset;
+        }
+
+        static void Reset()
+        {
+            SceneOverrides.resetOverrides -= Reset;
+            Enabled = false;
         }
     }
 }

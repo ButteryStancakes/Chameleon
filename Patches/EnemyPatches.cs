@@ -1,4 +1,5 @@
 ﻿using Chameleon.Info;
+using Chameleon.Overrides.Interior;
 using HarmonyLib;
 using System.IO;
 using System.Reflection;
@@ -7,9 +8,10 @@ using UnityEngine;
 namespace Chameleon.Patches
 {
     [HarmonyPatch]
-    class EnemyPatches
+    static class EnemyPatches
     {
-        static Texture giantNormal, giantSnowy, giantBurnt;
+        static Texture giantNormal, giantSnowy, giantBurnt, cadaverSnowy;
+        static Material cadaverBloomPlantsSnowy;
 
         [HarmonyPatch(typeof(ForestGiantAI), nameof(ForestGiantAI.Start))]
         [HarmonyPostfix]
@@ -63,14 +65,50 @@ namespace Chameleon.Patches
 
         [HarmonyPatch(typeof(ForestGiantAI), nameof(ForestGiantAI.KillEnemy))]
         [HarmonyPostfix]
-        static void ForestGiantAI_Post_KillEnemy(ForestGiantAI __instance, float ___timeAtStartOfBurning)
+        static void ForestGiantAI_Post_KillEnemy(ForestGiantAI __instance)
         {
-            if (Configuration.giantSkins.Value && giantBurnt != null && ___timeAtStartOfBurning > 0f)
+            if (Configuration.giantSkins.Value && giantBurnt != null && __instance.timeAtStartOfBurning > 0f)
             {
                 foreach (SkinnedMeshRenderer rend in __instance.GetComponentsInChildren<SkinnedMeshRenderer>())
                     rend.material.mainTexture = giantBurnt;
 
                 Plugin.Logger.LogDebug("Forest Keeper: Reduced to charcoal");
+            }
+        }
+
+        [HarmonyPatch(typeof(CadaverGrowthAI), nameof(CadaverGrowthAI.Start))]
+        [HarmonyPostfix]
+        static void CadaverGrowthAI_Post_Start(CadaverGrowthAI __instance)
+        {
+            if (Configuration.snowyCadavers.Value && RetextureCaverns.Type == CavernType.Ice && __instance.plantBatchers != null && __instance.plantBatchers.Length > 0)
+            {
+                if (cadaverBloomPlantsSnowy == null)
+                {
+                    if (cadaverSnowy == null)
+                    {
+                        try
+                        {
+                            AssetBundle enemyBundle = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "enemyskins"));
+                            cadaverSnowy = enemyBundle.LoadAsset<Texture>("CadaverBloomGrowthMegatextureV2_2_Chameleon2");
+                            enemyBundle.Unload(false);
+                        }
+                        catch
+                        {
+                            Plugin.Logger.LogError("Encountered some error loading assets from bundle \"enemyskins\". Did you install the plugin correctly?");
+                            return;
+                        }
+                    }
+
+                    cadaverBloomPlantsSnowy = Object.Instantiate(__instance.plantBatchers[0].material);
+                    cadaverBloomPlantsSnowy.mainTexture = cadaverSnowy;
+                    cadaverBloomPlantsSnowy.SetColor("_BaseColorMultiplier", new(0.85f, 0.85f, 0.85f));
+                }
+
+                foreach (BatchAllMeshChildren plantBatcher in __instance.plantBatchers)
+                {
+                    plantBatcher.material = cadaverBloomPlantsSnowy;
+                    Plugin.Logger.LogDebug($"Cadavers: Snow for {plantBatcher.mesh.name}");
+                }
             }
         }
     }

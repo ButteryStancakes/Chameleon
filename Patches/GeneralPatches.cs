@@ -2,12 +2,13 @@
 using Chameleon.Overrides.Exterior;
 using Chameleon.Overrides.Interior;
 using HarmonyLib;
+using System.Linq;
 using UnityEngine;
 
 namespace Chameleon.Patches
 {
     [HarmonyPatch]
-    class GeneralPatches
+    static class GeneralPatches
     {
         [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.Start))]
         [HarmonyPostfix]
@@ -42,13 +43,6 @@ namespace Chameleon.Patches
                 __instance.TimeOfDayMusic.volume = 1f;
         }
 
-        [HarmonyPatch(typeof(SoundManager), nameof(SoundManager.PlayRandomOutsideMusic))]
-        [HarmonyPrefix]
-        static bool SoundManager_Pre_PlayRandomOutsideMusic(SoundManager __instance)
-        {
-            return !Configuration.eclipsesBlockMusic.Value || StartOfRound.Instance.currentLevel.currentWeather != LevelWeatherType.Eclipsed;
-        }
-
         [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.TurnOnAllLights))]
         [HarmonyPostfix]
         static void RoundManager_Post_TurnOnAllLights(RoundManager __instance, bool on)
@@ -62,6 +56,86 @@ namespace Chameleon.Patches
         {
             if (__instance.powerOffPermanently && Common.breakerBoxHasReset)
                 BreakerBoxShutdown.ShutOff();
+        }
+
+        [HarmonyPatch(typeof(EntranceTeleport), nameof(EntranceTeleport.PlayAudioAtTeleportPositions))]
+        [HarmonyPrefix]
+        static bool EntranceTeleport_Pre_PlayAudioAtTeleportPositions(EntranceTeleport __instance)
+        {
+            if (string.IsNullOrEmpty(Configuration.fancyEntrances.Value))
+                return true;
+
+            float pitch = Random.Range(0.94f, 1.06f);
+
+            // fire exits
+            if (__instance.entranceId != 0)
+            {
+                if (__instance.doorAudios == null || __instance.doorAudios.Length < 1)
+                    return false;
+
+                AudioClip doorAudio = __instance.doorAudios[Random.Range(0, __instance.doorAudios.Length)];
+                if (__instance.entrancePointAudio != null)
+                {
+                    __instance.entrancePointAudio.pitch = pitch;
+                    __instance.entrancePointAudio.PlayOneShot(doorAudio);
+                    WalkieTalkie.TransmitOneShotAudio(__instance.entrancePointAudio, doorAudio);
+                }
+                if (__instance.exitScript?.entrancePointAudio != null)
+                {
+                    __instance.exitScript.entrancePointAudio.pitch = pitch;
+                    __instance.exitScript.entrancePointAudio.PlayOneShot(doorAudio);
+                    WalkieTalkie.TransmitOneShotAudio(__instance.exitScript.entrancePointAudio, doorAudio);
+                }
+
+                return false;
+            }
+
+            AudioClip[] shutDoors = EntranceDoorFancifier.Enabled ? StartOfRound.Instance.shutDoorWooden : StartOfRound.Instance.shutDoorMetal;
+            AudioClip shutDoor = shutDoors[Random.Range(0, shutDoors.Length)];
+
+            if (__instance.entrancePointAudio != null)
+            {
+                __instance.entrancePointAudio.pitch = pitch;
+                __instance.entrancePointAudio.PlayOneShot(shutDoor);
+                WalkieTalkie.TransmitOneShotAudio(__instance.entrancePointAudio, shutDoor);
+            }
+            if (__instance.exitScript?.entrancePointAudio != null)
+            {
+                __instance.exitScript.entrancePointAudio.pitch = pitch;
+                __instance.exitScript.entrancePointAudio.PlayOneShot(shutDoor);
+                WalkieTalkie.TransmitOneShotAudio(__instance.exitScript.entrancePointAudio, shutDoor);
+            }
+
+            return false;
+        }
+
+        [HarmonyPatch(typeof(EntranceTeleport), nameof(EntranceTeleport.PlayCreakSFX))]
+        [HarmonyPrefix]
+        static bool EntranceTeleport_Pre_PlayCreakSFX(EntranceTeleport __instance)
+        {
+            if (string.IsNullOrEmpty(Configuration.fancyEntrances.Value))
+                return true;
+
+            float pitch = Random.Range(0.94f, 1.06f);
+
+            AudioClip[] creakOpenDoors = EntranceDoorFancifier.Enabled ? StartOfRound.Instance.creakOpenDoorWooden : StartOfRound.Instance.creakOpenDoorMetal;
+            AudioClip creakOpenDoor = creakOpenDoors[Random.Range(0, creakOpenDoors.Length)];
+
+            __instance.playingCreakAudio = true;
+            if (__instance.entrancePointAudio != null)
+            {
+                __instance.entrancePointAudio.clip = creakOpenDoor;
+                __instance.entrancePointAudio.pitch = pitch;
+                __instance.entrancePointAudio.Play();
+            }
+            if (__instance.exitScript?.thisEntranceAnimator != null && __instance.exitScript.entrancePointAudio != null)
+            {
+                __instance.exitScript.entrancePointAudio.clip = creakOpenDoor;
+                __instance.exitScript.entrancePointAudio.pitch = pitch;
+                __instance.exitScript.entrancePointAudio.Play();
+            }
+
+            return false;
         }
     }
 }

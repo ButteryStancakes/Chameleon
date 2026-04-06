@@ -9,55 +9,40 @@ namespace Chameleon.Info
         internal static Dictionary<string, LevelCosmeticInfo> predefinedLevels = new()
         {
             { "ExperimentationLevel", new(){
-                fakeDoor1Path = "/Environment/SteelDoor (6)",
-                fakeDoor2Path = "/Environment/SteelDoor (5)",
                 framePath = null,
-                planePath = null,
+                planePath = "/Environment/OutsideEntranceVisualDoorsContainer/Plane",
                 fancyDoorPos = new(-113.911003f, 2.89499998f, -17.6700001f),
-                fancyDoorRot = Quaternion.Euler(-90f, 0f, 0f),
-                fancyDoorScalar = new(1f, 1.07f, 1f)
+                fancyDoorRot = Quaternion.Euler(-90f, 0f, 0f)
             }},
             { "AssuranceLevel", new(){
                 fancyDoorPos = new(135.248993f, 6.45200014f, 74.4899979f),
-                fancyDoorRot = Quaternion.Euler(-90f, 180f, 0f),
-                planeOffset = new(0f, -1f, -0.075f)
+                fancyDoorRot = Quaternion.Euler(-90f, 180f, 0f)
             }},
             { "VowLevel", new(){
-                fancyDoorPos = new(-29.2789993f, -1.176f, 151.069f),
+                fancyDoorPos = new(-29.2789993f, -1.29f, 151.06f),
                 fancyDoorRot = Quaternion.Euler(-90f, 90f, 0f),
-                planeOffset = new(0.075f, -1f, 0f),
-                //doorLightColor = DoorLightPalette.WITCHES_BACKGROUND,
-                grayRocks = true
+                //doorLightColor = DoorLightPalette.WITCHES_BACKGROUND
             }},
             { "OffenseLevel", new(){
-                fancyDoorPos = new(128.936005f, 16.3500004f, -53.7130013f),
-                fancyDoorRot = Quaternion.Euler(-90f, 180f, -73.621f),
-                planeOffset = new(0f, -1f, 0.027f)
+                fancyDoorPos = new(128.929001f, 16.3500004f, -53.7340012f),
+                fancyDoorRot = Quaternion.Euler(-90f, 180f, -73.60001f)
             }},
             { "MarchLevel", new(){
-                fancyDoorPos = new(-158.179993f, -3.95300007f, 21.7080002f),
+                fancyDoorPos = new(-109.93f, -1.82f, 21.275f),
                 fancyDoorRot = Quaternion.Euler(-90f, 0f, 0f),
-                planeOffset = new(-0.075f, -1f, 0f),
-                //doorLightColor = DoorLightPalette.WITCHES_BACKGROUND,
-                grayRocks = true
+                doorLightColor = new(0.3372549f, 0.4901961f, 0.4188235f)
             }},
             { "AdamanceLevel", new(){
-                fakeDoor1Path = "/Environment/Teleports/EntranceTeleportA/SteelDoorFake",
-                fakeDoor2Path = "/Environment/Teleports/EntranceTeleportA/SteelDoorFake (1)",
-                framePath = "/Environment/Teleports/EntranceTeleportA/DoorFrame (1)",
                 planePath = "/Environment/Teleports/EntranceTeleportA/Plane",
-                fancyDoorPos = new(-122.031998f, 1.84300005f, -3.6170001f),
+                fancyDoorPos = new(-122.031998f, 1.83f, -3.6170001f),
                 fancyDoorRot = Quaternion.Euler(-90f, 0f, 0f),
-                planeOffset = new(-0.00336369989f, -0.0699860007f, -1.02460158f),
-                doorLightColor = DoorLightPalette.WITCHES_BACKGROUND,
-                grayRocks = true
+                doorLightColor = DoorLightPalette.AMETHYST_BACKGROUND,
+                doorLightColorFoggy = new(0.502183f, 0.4547059f, 0.5882353f)
             }},
             { "EmbrionLevel", new(){
-                fancyDoorPos = new(-195.470001f, 6.35699987f, -7.82999992f),
+                fancyDoorPos = new(-195.470001f, 6.46f, -7.82999992f),
                 fancyDoorRot = Quaternion.Euler(-90f, 0f, 39.517f),
-                planeOffset = new(-0.045f, -1f, -0.05513f),
-                doorLightColor = DoorLightPalette.AMETHYST_BACKGROUND,
-                grayRocks = true
+                doorLightColor = DoorLightPalette.AMETHYST_BACKGROUND
             }},
             { "RendLevel", new(){
                 fancyDoorPos = new(50.5449982f, -16.8225021f, -152.716583f),
@@ -65,24 +50,22 @@ namespace Chameleon.Info
                 doorLightColor = DoorLightPalette.BLIZZARD_BACKGROUND
             }},
             { "DineLevel", new(){
-                fancyDoorPos = new(-120.709869f, -16.3370018f, -4.26810265f),
-                fancyDoorRot = Quaternion.Euler(-90f, 0f, 90.836f),
+                fancyDoorPos = new(-120.671f, -16.747f, -4.888f),
+                fancyDoorRot = Quaternion.Euler(-90f, 0f, 76.217f),
                 doorLightColor = DoorLightPalette.BLIZZARD_BACKGROUND
             }},
             { "TitanLevel", new(){
-                fancyDoorPos = new(-35.8769989f, 47.64f, 8.93900013f),
+                fancyDoorPos = new(-35.8769989f, 47.58f, 8.93900013f),
                 fancyDoorRot = Quaternion.Euler(-90f, 0f, 35.333f),
-                planeOffset = new(0.03f, -1f, 0.036f),
-                doorLightColor = DoorLightPalette.BLIZZARD_BACKGROUND
+                doorLightColor = DoorLightPalette.BLIZZARD_BACKGROUND,
+                doorLightColorFoggy = new(0.3921569f, 0.3764706f, 0.4705882f)
             }},
             { "ArtificeLevel", new(){
-                fakeDoor1Path = "/Environment/MainFactory/SteelDoorFake",
-                fakeDoor2Path = "/Environment/MainFactory/SteelDoorFake (1)",
+                doorsContainerPath = "/Environment/MainFactory/OutsideEntranceVisualDoorsContainer",
                 framePath = "/Environment/MainFactory/DoorFrame (1)",
                 planePath = "/Environment/MainFactory/Plane",
-                fancyDoorPos = new(52.3199997f, -0.665000021f, -156.145996f),
-                fancyDoorRot = Quaternion.Euler(-90f, -90f, 0f),
-                grayRocks = true
+                fancyDoorPos = new(52.3199997f, -0.665000021f, -156.135f),
+                fancyDoorRot = Quaternion.Euler(-90f, -90f, 0f)
             }}
         };
 
@@ -93,8 +76,6 @@ namespace Chameleon.Info
                 waterColor = true,
                 waterColorShallow = new Color(0f, 0.18982977f, 0.20754719f, 0.972549f),
                 waterColorDeep = new Color(0.12259702f, 0.1792453f, 0.16491137f, 0.9882353f),
-                //waterColorShallow = new Color(0.7028302f, 0.9077749f, 1f, 1f),
-                //waterColorDeep = new Color(0.4775274f, 0.5763646f, 0.6886792f, 0.8156863f),
                 smallRockMat = "CaveRocks1 1"
             }},
             { CavernType.Amethyst, new(){
@@ -125,7 +106,7 @@ namespace Chameleon.Info
             }},
             { CavernType.Slate, new(){
                 noRockMat = true,
-                rockColor = RockRecolorer.ROCK_GRAY,
+                rockColor = new Color(0.2358491f, 0.2358491f, 0.2358491f),
                 waterColor = true,
                 waterColorShallow = new Color(0.254902f, 0.2627451f, 0.2901961f, 0.972549f),
                 waterColorDeep = new Color(0.0627451f, 0.1372549f, 0.145098f, 0.9882353f)
