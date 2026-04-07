@@ -1,7 +1,5 @@
 ﻿using Chameleon.Overrides.Rendering;
 using HarmonyLib;
-using System.Linq;
-using UnityEngine;
 
 namespace Chameleon.Patches
 {

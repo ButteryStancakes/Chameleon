@@ -10,7 +10,7 @@ namespace Chameleon.Overrides.Interior
 {
     internal class RetextureCaverns
     {
-        internal static CavernType Type { get; private set; }
+        internal static CavernType Type { get; private set; } = CavernType.Ice;
 
         internal static Dictionary<string, IntWithRarity[]> cavernWeightLists = [];
 

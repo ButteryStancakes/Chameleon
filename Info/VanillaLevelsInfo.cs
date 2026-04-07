@@ -1,5 +1,4 @@
-﻿using Chameleon.Overrides.Exterior;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace Chameleon.Info
@@ -20,8 +19,7 @@ namespace Chameleon.Info
             }},
             { "VowLevel", new(){
                 fancyDoorPos = new(-29.2789993f, -1.29f, 151.06f),
-                fancyDoorRot = Quaternion.Euler(-90f, 90f, 0f),
-                //doorLightColor = DoorLightPalette.WITCHES_BACKGROUND
+                fancyDoorRot = Quaternion.Euler(-90f, 90f, 0f)
             }},
             { "OffenseLevel", new(){
                 fancyDoorPos = new(128.929001f, 16.3500004f, -53.7340012f),
@@ -30,7 +28,7 @@ namespace Chameleon.Info
             { "MarchLevel", new(){
                 fancyDoorPos = new(-109.93f, -1.82f, 21.275f),
                 fancyDoorRot = Quaternion.Euler(-90f, 0f, 0f),
-                doorLightColor = new(0.3372549f, 0.4901961f, 0.4188235f)
+                doorLightColor = new(0.4901961f, 0.4693464f, 0.3764706f)
             }},
             { "AdamanceLevel", new(){
                 planePath = "/Environment/Teleports/EntranceTeleportA/Plane",
