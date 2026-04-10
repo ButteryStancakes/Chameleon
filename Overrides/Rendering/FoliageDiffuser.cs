@@ -10,6 +10,7 @@ namespace Chameleon.Overrides.Rendering
     internal class FoliageDiffuser
     {
         static Material diffuseLeaves;
+        static Texture swampForestTextureMask;
         static DiffusionProfile foliageDiffusionProfile;
         static float foliageDiffusionProfileHash;
 
@@ -45,6 +46,16 @@ namespace Chameleon.Overrides.Rendering
             foreach (Renderer rend in renderers)
             {
                 Material foliageMat = rend.sharedMaterial;
+                Texture transmissionMaskMap = foliageMat.GetTexture("_TransmissionMaskMap");
+                if (transmissionMaskMap != null)
+                {
+                    if (foliageMat.name.StartsWith("SwampForestTexture") && transmissionMaskMap != swampForestTextureMask)
+                    {
+                        foliageMat.SetTexture("_TransmissionMaskMap", swampForestTextureMask);
+                        Plugin.Logger.LogDebug($"Fixed foliage diffusion for \"{foliageMat.name}\" ({rend.name})");
+                    }
+                    continue;
+                }
                 if (foliageMat.GetFloat("_DiffusionProfileHash") == foliageDiffusionProfileHash && foliageMat.GetFloat("_MaterialID") == 5f)
                 {
                     //Plugin.Logger.LogDebug($"\"{foliageMat.name}\" already supports foliage diffusion");
@@ -71,6 +82,7 @@ namespace Chameleon.Overrides.Rendering
                 {
                     AssetBundle fancyFoliage = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "fancyfoliage"));
                     diffuseLeaves = fancyFoliage.LoadAsset<Material>("DiffuseLeaves");
+                    swampForestTextureMask = fancyFoliage.LoadAsset<Texture>("SwampForestTextureMask");
                     fancyFoliage.Unload(false);
                 }
                 catch
@@ -92,7 +104,7 @@ namespace Chameleon.Overrides.Rendering
 
         static bool FilterObjects(Renderer rend)
         {
-            return rend.sharedMaterial != null && (rend.sharedMaterial.name.StartsWith("ForestTexture") || rend.sharedMaterial.name.StartsWith("TreeFlat") || rend.sharedMaterial.name.StartsWith("Leaves") || rend.sharedMaterial.name.StartsWith("GreenhousePlantsMat"));
+            return rend.sharedMaterial != null && (rend.sharedMaterial.name.Contains("ForestTexture") || rend.sharedMaterial.name.StartsWith("TreeFlat") || rend.sharedMaterial.name.StartsWith("Leaves") || rend.sharedMaterial.name.StartsWith("GreenhousePlantsMat"));
         }
     }
 }
