@@ -111,6 +111,28 @@ namespace Chameleon.Overrides.Interior
                     }
                 }
             }
+
+            // v80+ changed how cave tile collision is setup, which broke previous footstep patches
+            if (!string.IsNullOrEmpty(currentCavernInfo.tag) && currentCavernInfo.tag != "Rock" && Common.CAN_REPLACE_CAVE_TAGS && !Configuration.dontChangeCaveSteps.Value)
+            {
+                foreach (Tile tile in Common.dungeonRoot.GetComponentsInChildren<Tile>())
+                {
+                    if (!tile.name.StartsWith("Cave"))
+                        continue;
+
+                    foreach (Collider collider in tile.GetComponentsInChildren<Collider>())
+                    {
+                        if (!collider.CompareTag("Rock"))
+                            continue;
+
+                        // this collider is not on a footstep layer anyway
+                        if ((StartOfRound.Instance.walkableSurfacesMask & (1 << collider.gameObject.layer)) == 0)
+                            continue;
+
+                        collider.tag = currentCavernInfo.tag;
+                    }
+                }
+            }
         }
 
         static CavernType GetCurrentMoonCaverns()
