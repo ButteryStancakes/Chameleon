@@ -1,4 +1,5 @@
-﻿using BepInEx.Configuration;
+﻿using BepInEx.Bootstrap;
+using BepInEx.Configuration;
 using Chameleon.Info;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -53,7 +54,7 @@ namespace Chameleon
             planetPreview = configFile.Bind(
                 "Rendering",
                 "PlanetPreview",
-                true,
+                !Chainloader.PluginInfos.ContainsKey(Plugin.GUID_CELESTIAL_TINT),
                 "The currently orbited planet is visible on the ship's external security camera while in space, as it used to be in v38.\nYou should disable this if you encounter lighting issues on the ship.");
 
             fancyFoliage = configFile.Bind(
@@ -98,7 +99,7 @@ namespace Chameleon
             rainyMarch = configFile.Bind(
                 "Exterior",
                 "RainyMarch",
-                true,
+                false,
                 "March is constantly rainy, as described in its terminal page. This is purely visual and does not affect quicksand generation.");
 
             stormyGordion = configFile.Bind(
@@ -234,9 +235,9 @@ namespace Chameleon
         static void InteriorMineshaftConfig()
         {
             PopulateCavernsList(CavernType.Vanilla, "Vow:100,March:100,Adamance:100,Artifice:100");
-            PopulateCavernsList(CavernType.Mesa, "Experimentation:100,Titan:100");
+            PopulateCavernsList(CavernType.Mesa, "Experimentation:100");
             PopulateCavernsList(CavernType.Desert, "Assurance:100,Offense:100");
-            PopulateCavernsList(CavernType.Ice, "Rend:100,Dine:100");
+            PopulateCavernsList(CavernType.Ice, "Rend:100,Dine:100,Titan:100");
             PopulateCavernsList(CavernType.Amethyst, "Embrion:100");
             PopulateCavernsList(CavernType.Gravel, string.Empty);
             PopulateCavernsList(CavernType.Salt, string.Empty);

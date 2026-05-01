@@ -12,15 +12,17 @@ namespace Chameleon
     [BepInDependency(GUID_LOBBY_COMPATIBILITY, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(GUID_BUTTERY_FIXES, BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency(GUID_NO_LOST_SIGNAL, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(GUID_CELESTIAL_TINT, BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
-        internal const string PLUGIN_GUID = "butterystancakes.lethalcompany.chameleon", PLUGIN_NAME = "Chameleon", PLUGIN_VERSION = "2.3.3";
+        internal const string PLUGIN_GUID = "butterystancakes.lethalcompany.chameleon", PLUGIN_NAME = "Chameleon", PLUGIN_VERSION = "2.3.4";
         internal static new ManualLogSource Logger;
 
         const string GUID_ARTIFICE_BLIZZARD = "butterystancakes.lethalcompany.artificeblizzard";
         const string GUID_LOBBY_COMPATIBILITY = "BMX.LobbyCompatibility";
         const string GUID_BUTTERY_FIXES = "butterystancakes.lethalcompany.butteryfixes";
         const string GUID_NO_LOST_SIGNAL = "Tomatobird.NoLostSignal";
+        internal const string GUID_CELESTIAL_TINT = "CelestialTint";
 
         void Awake()
         {
