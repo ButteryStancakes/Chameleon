@@ -11,7 +11,29 @@ namespace Chameleon.Overrides
 
         internal static void Apply()
         {
-            if (string.IsNullOrEmpty(Configuration.fancyEntrances.Value) || StartOfRound.Instance.currentLevel.name == "CompanyBuildingLevel" || Common.currentLevelCosmeticInfo == null)
+            if (string.IsNullOrEmpty(Configuration.fancyEntrances.Value) || StartOfRound.Instance.currentLevel.name == "CompanyBuildingLevel")
+                return;
+
+            // set up manor doors?
+            if (string.IsNullOrEmpty(Common.interior))
+                return;
+
+            try
+            {
+                if (!Configuration.fancyEntrances.Value.Split(',').Contains(Common.interior))
+                    return;
+            }
+            catch
+            {
+                Plugin.Logger.LogError($"Encountered an error parsing the \"FancyEntrances\" setting. Please double check that your config follows proper syntax, then start another round.");
+                if (RoundManager.Instance.currentDungeonType != 1)
+                    return;
+            }
+
+            Enabled = true;
+            SceneOverrides.resetOverrides += Reset;
+
+            if (Common.currentLevelCosmeticInfo == null)
                 return;
 
             Transform plane = GameObject.Find(Common.currentLevelCosmeticInfo.planePath)?.transform;
@@ -33,22 +55,6 @@ namespace Chameleon.Overrides
                         rend.sharedMaterial = Common.black;
                     }
                 }
-            }
-
-            // set up manor doors?
-            if (string.IsNullOrEmpty(Common.interior))
-                return;
-
-            try
-            {
-                if (!Configuration.fancyEntrances.Value.Split(',').Contains(Common.interior))
-                    return;
-            }
-            catch
-            {
-                Plugin.Logger.LogError($"Encountered an error parsing the \"FancyEntrances\" setting. Please double check that your config follows proper syntax, then start another round.");
-                if (RoundManager.Instance.currentDungeonType != 1)
-                    return;
             }
 
             GameObject doorsContainer = GameObject.Find(Common.currentLevelCosmeticInfo.doorsContainerPath);
@@ -100,9 +106,6 @@ namespace Chameleon.Overrides
             Object.Instantiate(fancyDoor, fakeDoor1.parent);
             fakeDoor2.gameObject.SetActive(false);
             Object.Instantiate(fancyDoor, fakeDoor2.parent).transform.SetLocalPositionAndRotation(new(0.14f, 0f, 0f), Quaternion.Euler(0f, 0f, -179f));
-
-            Enabled = true;
-            SceneOverrides.resetOverrides += Reset;
         }
 
         static void Reset()

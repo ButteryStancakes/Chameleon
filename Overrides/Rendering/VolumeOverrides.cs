@@ -37,7 +37,7 @@ namespace Chameleon.Overrides.Rendering
                     }
                 }
 
-                if (volume.sharedProfile.TryGet(out Fog fog))
+                if (volume.sharedProfile != null && volume.sharedProfile.TryGet(out Fog fog))
                 {
                     if (Configuration.fogReprojection.Value && fog.denoisingMode.GetValue<FogDenoisingMode>() != FogDenoisingMode.Reprojection)
                     {

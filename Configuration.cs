@@ -31,7 +31,7 @@ namespace Chameleon
 
         static ConfigFile configFile;
 
-        internal static ConfigEntry<bool> doorLightColors, rainyMarch, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, giantSkins, fixDoorMeshes, fancyFoliage, fogReprojection, fixTitanVolume, fixArtificeVolume, blackoutWindows, dontChangeCaveSteps, snowyCadavers;
+        internal static ConfigEntry<bool> doorLightColors, rainyMarch, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, giantSkins, fixDoorMeshes, fancyFoliage, fogReprojection, fixTitanVolume, fixArtificeVolume, blackoutWindows, dontChangeCaveSteps, snowyCadavers, arcticFox;
         internal static ConfigEntry<GordionStorms> stormyGordion;
         internal static ConfigEntry<FogQuality> fogQuality;
         internal static ConfigEntry<float> weatherAmbience;
@@ -93,7 +93,7 @@ namespace Chameleon
             fancyEntrances = configFile.Bind(
                 "Exterior",
                 "FancyEntrances",
-                "Level2Flow,sdmFoyer,sdmBasement,SpookyManorFlow,AquaticDungeonFlow,MuseumInteriorFlow,CabinDungeonFlow,v62Mansion-Level2Flow",
+                "Level2Flow,sdmFoyer,sdmBasement,SpookyManorFlow,AquaticDungeonFlow,MuseumInteriorFlow,CabinDungeonFlow,v62Mansion-Level2Flow,LanternManor,BellevilleApp,GoldenHotel,CrimsonKeep",
                 "Changes the front doors to match the manor entrance's doors when one of these interiors generates. Works for ONLY vanilla moons! Leave empty to disable.\nUpon hosting a lobby, the full list of interior names will be printed in the debug log, which you can use as a guide.");
 
             rainyMarch = configFile.Bind(
@@ -113,6 +113,12 @@ namespace Chameleon
                 "GiantSkins",
                 true,
                 "When the surface is snowy, Forest Keepers will blend in a little better with the environment. They will also appear more charred after being burnt to death.\nIf you are experiencing issues with giants and have other skin mods installed, you should probably disable this setting.");
+
+            arcticFox = configFile.Bind(
+                "Exterior",
+                "ArcticFox",
+                true,
+                "On moons which generate snowy vain shrouds, the kidnapper fox will also sport a winter white coat.");
         }
 
         static void InteriorConfig()

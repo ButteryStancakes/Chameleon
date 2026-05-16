@@ -10,8 +10,8 @@ namespace Chameleon.Patches
     [HarmonyPatch]
     static class EnemyPatches
     {
-        static Texture giantNormal, giantSnowy, giantBurnt, cadaverSnowy;
-        static Material cadaverBloomPlantsSnowy;
+        static Texture giantNormal, giantSnowy, giantBurnt, cadaverSnowy, foxArctic;
+        static Material cadaverBloomPlantsSnowy, bushWolfMatArctic;
 
         [HarmonyPatch(typeof(ForestGiantAI), nameof(ForestGiantAI.Start))]
         [HarmonyPostfix]
@@ -108,6 +108,54 @@ namespace Chameleon.Patches
                 {
                     plantBatcher.material = cadaverBloomPlantsSnowy;
                     Plugin.Logger.LogDebug($"Cadavers: Snow for {plantBatcher.mesh.name}");
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(BushWolfEnemy), nameof(BushWolfEnemy.Start))]
+        [HarmonyPostfix]
+        static void BushWolfEnemy_Post_Start(BushWolfEnemy __instance)
+        {
+            if (Configuration.arcticFox.Value)
+            {
+                if (foxArctic == null)
+                {
+                    try
+                    {
+                        AssetBundle enemyBundle = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "enemyskins"));
+                        foxArctic = enemyBundle.LoadAsset<Texture>("BushWolfTexFinalGrey");
+                        enemyBundle.Unload(false);
+                    }
+                    catch
+                    {
+                        Plugin.Logger.LogError("Encountered some error loading assets from bundle \"enemyskins\". Did you install the plugin correctly?");
+                        return;
+                    }
+                }
+
+                if (StartOfRound.Instance.currentLevel.moldType == 1 && foxArctic != null)
+                {
+                    foreach (SkinnedMeshRenderer rend in __instance.GetComponentsInChildren<SkinnedMeshRenderer>())
+                    {
+                        Material[] materials = rend.sharedMaterials;
+                        for (int i = 0; i < materials.Length; i++)
+                        {
+                            if (materials[i].name.StartsWith("BushWolfMatMouth"))
+                                continue;
+
+                            if (bushWolfMatArctic == null)
+                            {
+                                bushWolfMatArctic = Object.Instantiate(materials[i]);
+                                bushWolfMatArctic.SetTexture("_Diffuse", foxArctic);
+                            }
+
+                            materials[i] = bushWolfMatArctic;
+                        }
+
+                        rend.sharedMaterials = materials;
+                    }
+
+                    Plugin.Logger.LogDebug("Kidnapper Fox: Snow camouflage");
                 }
             }
         }

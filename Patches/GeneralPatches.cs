@@ -136,5 +136,12 @@ namespace Chameleon.Patches
 
             return false;
         }
+
+        [HarmonyPatch(typeof(GameNetworkManager), nameof(GameNetworkManager.Disconnect))]
+        [HarmonyPostfix]
+        static void GameNetworkManager_Post_Disconnect()
+        {
+            DoorMaterialsFixer.ClearMaterialCache();
+        }
     }
 }

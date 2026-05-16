@@ -34,7 +34,7 @@ namespace Chameleon.Overrides
 
             Renderer[] renderers = Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None);
             List<Renderer> fancyDoorsGlass = [];
-            foreach (Renderer rend in Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None).Where(rend => rend.name == "DoorMesh"))
+            foreach (Renderer rend in renderers.Where(rend => rend.name == "DoorMesh"))
             {
                 if (furnitureGlass == null)
                 {
@@ -70,9 +70,15 @@ namespace Chameleon.Overrides
                         fancyDoorsGlass.Add(rend);
                 }
             }
-            
-            if (fancyDoorsGlass.Count > 0 && furnitureGlass != null)
+
+            if (fancyDoorsGlass.Count > 0)
             {
+                if (furnitureGlass == null)
+                {
+                    Plugin.Logger.LogWarning("Material \"FurnitureGlass\" is missing, this will cause greenhouse doors to look incorrect");
+                    return;
+                }
+
                 foreach (Renderer fancyDoorGlass in fancyDoorsGlass)
                 {
                     fancyDoorGlass.sharedMaterials =
@@ -86,8 +92,25 @@ namespace Chameleon.Overrides
 
         static Material MakeMaterialDoubleSided(Material material)
         {
-            if (materialCache.ContainsKey(material.name))
-                return materialCache[material.name];
+            if (materialCache.TryGetValue(material.name, out Material cachedMaterial))
+            {
+                if (cachedMaterial != null)
+                {
+                    if (cachedMaterial.shader != null && !cachedMaterial.shader.name.Contains("InternalErrorShader"))
+                        return cachedMaterial;
+                    else
+                    {
+                        Plugin.Logger.LogWarning($"Material \"{material.name}\" in double-sided cache is missing shader (custom asset?)");
+                        Object.Destroy(cachedMaterial);
+                        materialCache.Remove(material.name);
+                    }
+                }
+                else
+                {
+                    Plugin.Logger.LogWarning($"Material \"{material.name}\" has somehow disappeared from double-sided cache after creation");
+                    materialCache.Remove(material.name);
+                }
+            }
 
             Material mat = Object.Instantiate(material);
 
@@ -106,6 +129,19 @@ namespace Chameleon.Overrides
             materialCache.Add(material.name, mat);
 
             return mat;
+        }
+
+        internal static void ClearMaterialCache()
+        {
+            if (materialCache.Count <= 0)
+                return;
+
+            foreach (Material material in materialCache.Values)
+            {
+                if (material != null)
+                    Object.Destroy(material);
+            }
+            materialCache.Clear();
         }
     }
 }

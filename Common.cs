@@ -44,6 +44,7 @@ namespace Chameleon
             DungeonGenerator generator = RoundManager.Instance?.dungeonGenerator?.Generator;
 
             interior = StartOfRound.Instance.currentLevel.name != "CompanyBuildingLevel" ? generator?.DungeonFlow?.name : string.Empty;
+            Plugin.Logger.LogDebug($"Current interior: \"{interior}\"");
 
             if (!VanillaLevelsInfo.predefinedLevels.TryGetValue(StartOfRound.Instance.currentLevel.name, out currentLevelCosmeticInfo))
                 currentLevelCosmeticInfo = null;

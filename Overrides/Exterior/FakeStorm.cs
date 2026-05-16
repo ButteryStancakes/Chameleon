@@ -23,7 +23,7 @@ namespace Chameleon.Overrides.Exterior
                 int totalScrap = 0;
                 foreach (GrabbableObject item in Object.FindObjectsByType<GrabbableObject>(FindObjectsSortMode.None))
                 {
-                    if (item.itemProperties.isScrap)
+                    if (item.itemProperties.isScrap || item.itemProperties.itemId == 14)
                         totalScrap += item.scrapValue;
                 }
 
