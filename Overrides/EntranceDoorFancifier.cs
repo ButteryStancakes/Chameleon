@@ -14,6 +14,30 @@ namespace Chameleon.Overrides
             if (string.IsNullOrEmpty(Configuration.fancyEntrances.Value) || StartOfRound.Instance.currentLevel.name == "CompanyBuildingLevel")
                 return;
 
+            if (Common.currentLevelCosmeticInfo != null)
+            {
+                Transform plane = GameObject.Find(Common.currentLevelCosmeticInfo.planePath)?.transform;
+                if (!string.IsNullOrEmpty(Common.currentLevelCosmeticInfo.planePath))
+                {
+                    if (plane != null)
+                    {
+                        if (StartOfRound.Instance.currentLevel.sceneName == "Level9Artifice")
+                        {
+                            // fix "darkness plane" not covering the entire doorframe
+                            plane.SetLocalPositionAndRotation(new(67.955864f, 251.948593f, -136.272522f), Quaternion.Euler(-90f, 0f, 155.41f));
+                            plane.localScale = new(0.295510322f, 0.124950044f, 0.305550158f);
+                        }
+
+                        // fix shininess
+                        if (Common.black != null)
+                        {
+                            Renderer rend = plane.GetComponent<Renderer>();
+                            rend.sharedMaterial = Common.black;
+                        }
+                    }
+                }
+            }
+
             // set up manor doors?
             if (string.IsNullOrEmpty(Common.interior))
                 return;
@@ -35,27 +59,6 @@ namespace Chameleon.Overrides
 
             if (Common.currentLevelCosmeticInfo == null)
                 return;
-
-            Transform plane = GameObject.Find(Common.currentLevelCosmeticInfo.planePath)?.transform;
-            if (!string.IsNullOrEmpty(Common.currentLevelCosmeticInfo.planePath))
-            {
-                if (plane != null)
-                {
-                    if (StartOfRound.Instance.currentLevel.sceneName == "Level9Artifice")
-                    {
-                        // fix "darkness plane" not covering the entire doorframe
-                        plane.SetLocalPositionAndRotation(new(67.955864f, 251.948593f, -136.272522f), Quaternion.Euler(-90f, 0f, 155.41f));
-                        plane.localScale = new(0.295510322f, 0.124950044f, 0.305550158f);
-                    }
-
-                    // fix shininess
-                    if (Common.black != null)
-                    {
-                        Renderer rend = plane.GetComponent<Renderer>();
-                        rend.sharedMaterial = Common.black;
-                    }
-                }
-            }
 
             GameObject doorsContainer = GameObject.Find(Common.currentLevelCosmeticInfo.doorsContainerPath);
             Transform frame = string.IsNullOrEmpty(Common.currentLevelCosmeticInfo.framePath) ? null : GameObject.Find(Common.currentLevelCosmeticInfo.framePath)?.transform;

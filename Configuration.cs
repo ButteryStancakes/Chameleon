@@ -31,7 +31,7 @@ namespace Chameleon
 
         static ConfigFile configFile;
 
-        internal static ConfigEntry<bool> doorLightColors, rainyMarch, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, giantSkins, fixDoorMeshes, fancyFoliage, fogReprojection, fixTitanVolume, fixArtificeVolume, blackoutWindows, dontChangeCaveSteps, snowyCadavers, arcticFox;
+        internal static ConfigEntry<bool> doorLightColors, rainyMarch, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, giantSkins, fixDoorMeshes, fancyFoliage, fogReprojection, fixTitanVolume, fixArtificeVolume, blackoutWindows, dontChangeCaveSteps, snowyCadavers, arcticFox, fixShipMeshes;
         internal static ConfigEntry<GordionStorms> stormyGordion;
         internal static ConfigEntry<FogQuality> fogQuality;
         internal static ConfigEntry<float> weatherAmbience;
@@ -86,6 +86,12 @@ namespace Chameleon
                 "FixArtificeVolume",
                 true,
                 "\"Fixes\" Artifice's global volume, which has the exact opposite issue of Titan. This is more of a subjective change, but makes Artifice look more vibrant.");
+
+            fixShipMeshes = configFile.Bind(
+                "Rendering",
+                "FixShipMeshes",
+                true,
+                "Fixes several missing faces on ship objects (helmet, tubing, generator)");
         }
 
         static void ExteriorConfig()

@@ -2,6 +2,8 @@
 using Chameleon.Overrides.Exterior;
 using Chameleon.Overrides.Interior;
 using HarmonyLib;
+using System.IO;
+using System.Reflection;
 using UnityEngine;
 
 namespace Chameleon.Patches
@@ -12,9 +14,47 @@ namespace Chameleon.Patches
         [HarmonyPatch(typeof(StartOfRound), nameof(StartOfRound.Start))]
         [HarmonyPostfix]
         [HarmonyPriority(Priority.Last)]
-        static void StartOfRound_Post_Start()
+        [HarmonyWrapSafe]
+        static void StartOfRound_Post_Start(StartOfRound __instance)
         {
             Common.BuildWeightLists();
+
+            if (Configuration.fixShipMeshes.Value && __instance.elevatorTransform != null)
+            {
+                Renderer bezierCurve = __instance.elevatorTransform.Find("BezierCurve")?.GetComponent<Renderer>();
+                if (bezierCurve?.sharedMaterial != null)
+                {
+                    Material tubeVent;
+                    try
+                    {
+                        AssetBundle doubleSides = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "doublesides"));
+                        tubeVent = doubleSides.LoadAsset<Material>("TubeVent");
+                        doubleSides.Unload(false);
+                    }
+                    catch
+                    {
+                        Plugin.Logger.LogError("Encountered some error loading assets from bundle \"doublesides\". Did you install the plugin correctly?");
+                        return;
+                    }
+
+                    bezierCurve.sharedMaterial = tubeVent ?? DoorMaterialsFixer.MakeMaterialDoubleSided(bezierCurve.sharedMaterial);
+                }
+
+                Renderer doorGenerator = __instance.elevatorTransform.Find("DoorGenerator")?.GetComponent<Renderer>();
+                if (doorGenerator != null)
+                {
+                    Material[] materials = doorGenerator.sharedMaterials;
+                    if (materials != null && materials.Length > 0 && materials[0] != null)
+                    {
+                        materials[0] = DoorMaterialsFixer.MakeMaterialDoubleSided(materials[0]);
+                        doorGenerator.sharedMaterials = materials;
+                    }
+                }
+
+                Renderer circle001 = __instance.elevatorTransform.Find("ScavengerModelSuitParts/Circle.001")?.GetComponent<Renderer>();
+                if (circle001?.sharedMaterial != null)
+                    circle001.sharedMaterial = DoorMaterialsFixer.MakeMaterialDoubleSided(circle001.sharedMaterial, "Scavenger");
+            }
         }
 
         [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.FinishGeneratingNewLevelClientRpc))]

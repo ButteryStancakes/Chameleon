@@ -57,7 +57,7 @@ namespace Chameleon.Overrides
                 if (rend.sharedMaterials != null && rend.sharedMaterials.Length == 7 && rend.sharedMaterials[2] != null && rend.sharedMaterials[2].name.StartsWith("Material.001") && rend.sharedMaterials[5] != null && rend.sharedMaterials[5].name.StartsWith("HelmetGlass"))
                 {
                     Material[] doorMats = rend.sharedMaterials;
-                    doorMats[2] = MakeMaterialDoubleSided(doorMats[2]);
+                    doorMats[2] = MakeMaterialDoubleSided(doorMats[2], "DoorMesh");
                     if (helmetGlass1 != null && rend.GetComponentInChildren<InteractTrigger>() != null)
                         doorMats[5] = helmetGlass1;
                     rend.sharedMaterials = doorMats;
@@ -65,7 +65,7 @@ namespace Chameleon.Overrides
                 else if (rend.sharedMaterial != null && rend.sharedMaterials.Length == 1 && rend.TryGetComponent(out MeshFilter meshFilter))
                 {
                     if (meshFilter.sharedMesh.name == "FancyDoor")
-                        rend.sharedMaterial = MakeMaterialDoubleSided(rend.sharedMaterial);
+                        rend.sharedMaterial = MakeMaterialDoubleSided(rend.sharedMaterial, "DoorMesh");
                     else if (meshFilter.sharedMesh.name == "FancyDoorGlass")
                         fancyDoorsGlass.Add(rend);
                 }
@@ -90,9 +90,10 @@ namespace Chameleon.Overrides
             }
         }
 
-        static Material MakeMaterialDoubleSided(Material material)
+        internal static Material MakeMaterialDoubleSided(Material material, string identifier = null)
         {
-            if (materialCache.TryGetValue(material.name, out Material cachedMaterial))
+            string id = $"{(!string.IsNullOrEmpty(identifier) ? $"{identifier}/" : string.Empty)}{material.name}";
+            if (materialCache.TryGetValue(id, out Material cachedMaterial))
             {
                 if (cachedMaterial != null)
                 {
@@ -102,13 +103,13 @@ namespace Chameleon.Overrides
                     {
                         Plugin.Logger.LogWarning($"Material \"{material.name}\" in double-sided cache is missing shader (custom asset?)");
                         Object.Destroy(cachedMaterial);
-                        materialCache.Remove(material.name);
+                        materialCache.Remove(id);
                     }
                 }
                 else
                 {
                     Plugin.Logger.LogWarning($"Material \"{material.name}\" has somehow disappeared from double-sided cache after creation");
-                    materialCache.Remove(material.name);
+                    materialCache.Remove(id);
                 }
             }
 
@@ -126,7 +127,7 @@ namespace Chameleon.Overrides
             if (material.name.StartsWith("HelmetGlass 1"))
                 mat.color = new(mat.color.r, mat.color.g, mat.color.b, mat.color.a * 0.3098039f);
 
-            materialCache.Add(material.name, mat);
+            materialCache.Add(id, mat);
 
             return mat;
         }
