@@ -54,6 +54,9 @@ namespace Chameleon.Overrides
 
             Common.breakerBoxHasReset = false;
             resetOverrides?.Invoke();
+            
+            if (scene.name == "SampleSceneRelay")
+                DoorMaterialsFixer.ClearMaterialCache();
         }
 
         internal static void Refresh()

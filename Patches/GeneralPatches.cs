@@ -60,7 +60,7 @@ namespace Chameleon.Patches
         [HarmonyPatch(typeof(RoundManager), nameof(RoundManager.FinishGeneratingNewLevelClientRpc))]
         [HarmonyPostfix]
         [HarmonyBefore("TonightWeDine")]
-        [HarmonyAfter("Sniper1_1.WaterAssetRestorer")]
+        [HarmonyAfter("Sniper1_1.MaterialAssetRestorerCore")]
         static void RoundManager_Post_FinishGeneratingNewLevelClientRpc(RoundManager __instance)
         {
             Common.breakerBoxHasReset = true;
@@ -175,13 +175,6 @@ namespace Chameleon.Patches
             }
 
             return false;
-        }
-
-        [HarmonyPatch(typeof(GameNetworkManager), nameof(GameNetworkManager.Disconnect))]
-        [HarmonyPostfix]
-        static void GameNetworkManager_Post_Disconnect()
-        {
-            DoorMaterialsFixer.ClearMaterialCache();
         }
     }
 }
