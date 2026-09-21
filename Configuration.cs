@@ -85,7 +85,7 @@ namespace Chameleon
                 "Rendering",
                 "FixArtificeVolume",
                 true,
-                "\"Fixes\" Artifice's global volume, which has the exact opposite issue of Titan. This is more of a subjective change, but makes Artifice look more vibrant.");
+                "Fixes Artifice's global volume, which has the exact opposite issue of Titan. This change is a little more subjective, but makes Artifice look more vibrant.\nAlso fixes Artifice's sun becoming a dwarf star during Stormy/Flooded/Foggy weather.");
 
             fixShipMeshes = configFile.Bind(
                 "Rendering",
@@ -99,7 +99,7 @@ namespace Chameleon
             fancyEntrances = configFile.Bind(
                 "Exterior",
                 "FancyEntrances",
-                "Level2Flow,sdmFoyer,sdmBasement,SpookyManorFlow,AquaticDungeonFlow,MuseumInteriorFlow,CabinDungeonFlow,v62Mansion-Level2Flow,LanternManor,BellevilleApp,GoldenHotel,CrimsonKeep",
+                "Level2Flow,sdmFoyer,sdmBasement,SpookyManorFlow,AquaticDungeonFlow,MuseumInteriorFlow,CabinDungeonFlow,v62Mansion-Level2Flow,LanternManor,BellevilleApp,GoldenHotel,CrimsonKeep,LiminalHouseFlow",
                 "Changes the front doors to match the manor entrance's doors when one of these interiors generates. Works for ONLY vanilla moons! Leave empty to disable.\nUpon hosting a lobby, the full list of interior names will be printed in the debug log, which you can use as a guide.");
 
             rainyMarch = configFile.Bind(
@@ -150,7 +150,7 @@ namespace Chameleon
             weatherAmbience = configFile.Bind(
                 "Interior",
                 "WeatherAmbience",
-                0.4f,
+                0.35f,
                 new ConfigDescription(
                     "On moons where a blizzard or rainstorm is present, you will be able to hear it faintly while inside the building. Set volume from 0 (silent) to 1 (max).",
                     new AcceptableValueRange<float>(0f, 1f)));

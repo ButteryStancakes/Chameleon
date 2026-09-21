@@ -1,4 +1,5 @@
 ﻿using Chameleon.Info;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using UnityEngine;
@@ -11,15 +12,20 @@ namespace Chameleon.Overrides.Rendering
     {
         internal static void Apply()
         {
+            AnimationClip timeOfDaySunStormy = null;
             foreach (Volume volume in Object.FindObjectsByType<Volume>(FindObjectsSortMode.None))
             {
                 if (volume.name == "Sky and Fog Global Volume")
                 {
                     string profile = null;
+                    bool loadClip = false;
                     if (Configuration.fixTitanVolume.Value && StartOfRound.Instance.currentLevel.sceneName == "Level8Titan")
                         profile = "SnowyFog";
                     else if (Configuration.fixArtificeVolume.Value && StartOfRound.Instance.currentLevel.sceneName == "Level9Artifice" && !Queries.IsSnowLevel())
+                    {
                         profile = "Sky and Fog Settings Profile";
+                        loadClip = (timeOfDaySunStormy == null);
+                    }
 
                     if (!string.IsNullOrEmpty(profile))
                     {
@@ -28,6 +34,8 @@ namespace Chameleon.Overrides.Rendering
                             AssetBundle volumetricProfiles = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "volumetricprofiles"));
                             volume.sharedProfile = volumetricProfiles.LoadAsset<VolumeProfile>(profile) ?? volume.profile;
                             Plugin.Logger.LogDebug($"Changed profile on \"{volume.name}\"");
+                            if (loadClip)
+                                timeOfDaySunStormy = volumetricProfiles.LoadAsset<AnimationClip>("TimeOfDaySunStormy");
                             volumetricProfiles.Unload(false);
                         }
                         catch
@@ -69,6 +77,27 @@ namespace Chameleon.Overrides.Rendering
 
                     hdAdditionalCameraData.renderingPathCustomFrameSettingsOverrideMask.mask[(uint)FrameSettingsField.ReprojectionForVolumetrics] = true;
                     hdAdditionalCameraData.renderingPathCustomFrameSettings.SetEnabled(FrameSettingsField.ReprojectionForVolumetrics, true);
+                }
+            }
+
+            if (timeOfDaySunStormy != null)
+            {
+                Animator sunAnimator = TimeOfDay.Instance?.sunAnimator ?? Object.FindAnyObjectByType<animatedSun>()?.GetComponent<Animator>();
+                if (sunAnimator != null)
+                {
+                    AnimatorOverrideController animatorOverrideController = new(sunAnimator.runtimeAnimatorController);
+                    List<KeyValuePair<AnimationClip, AnimationClip>> overrides = [];
+                    foreach (AnimationClip clip in sunAnimator.runtimeAnimatorController.animationClips)
+                    {
+                        if (clip.name == timeOfDaySunStormy.name)
+                        {
+                            overrides.Add(new KeyValuePair<AnimationClip, AnimationClip>(clip, timeOfDaySunStormy));
+                            break;
+                        }
+                    }
+                    animatorOverrideController.ApplyOverrides(overrides);
+                    sunAnimator.runtimeAnimatorController = animatorOverrideController;
+                    Plugin.Logger.LogDebug($"Changed animation clips on \"{sunAnimator.name}\"");
                 }
             }
         }
