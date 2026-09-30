@@ -31,7 +31,7 @@ namespace Chameleon
 
         static ConfigFile configFile;
 
-        internal static ConfigEntry<bool> doorLightColors, rainyMarch, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, giantSkins, fixDoorMeshes, fancyFoliage, fogReprojection, fixTitanVolume, fixArtificeVolume, blackoutWindows, dontChangeCaveSteps, snowyCadavers, arcticFox, fixShipMeshes;
+        internal static ConfigEntry<bool> doorLightColors, rainyMarch, autoAdaptSnow, powerOffBreakerBox, powerOffWindows, planetPreview, giantSkins, fixDoorMeshes, fancyFoliage, fogReprojection, fixTitanVolume, fixArtificeVolume, blackoutWindows, dontChangeCaveSteps, snowyCadavers, arcticFox, fixShipMeshes, amazingAdamance, nightmareEmbrion;
         internal static ConfigEntry<GordionStorms> stormyGordion;
         internal static ConfigEntry<FogQuality> fogQuality;
         internal static ConfigEntry<float> weatherAmbience;
@@ -46,6 +46,7 @@ namespace Chameleon
             RenderingConfig();
             ExteriorConfig();
             InteriorConfig();
+            BonusConfig();
             MigrateLegacyConfigs();
         }
 
@@ -293,6 +294,21 @@ namespace Chameleon
             }
 
             PopulateGlobalListWithType((int)type, customList, ref cavernMappings, listName, type.ToString());
+        }
+
+        static void BonusConfig()
+        {
+            amazingAdamance = configFile.Bind(
+                "Bonus",
+                "AmazingAdamance",
+                false,
+                "Reverts Adamance's atmospheric palette to v73's, because it was green for an amazing reason.");
+
+            nightmareEmbrion = configFile.Bind(
+                "Bonus",
+                "NightmareEmbrion",
+                false,
+                "Makes Foggy weather red on Embrion, like earlier versions of Chameleon.");
         }
 
         static void MigrateLegacyConfigs()

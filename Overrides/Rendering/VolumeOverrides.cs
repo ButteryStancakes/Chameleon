@@ -100,6 +100,23 @@ namespace Chameleon.Overrides.Rendering
                     Plugin.Logger.LogDebug($"Changed animation clips on \"{sunAnimator.name}\"");
                 }
             }
+
+            if (StartOfRound.Instance != null)
+            {
+                Color? fogColor = null;
+                if (StartOfRound.Instance.currentLevel.sceneName == "Level10Adamance" && Configuration.amazingAdamance.Value)
+                    fogColor = new(0.1873164f, 0.2156863f, 0.1490196f);
+
+                if (fogColor.HasValue)
+                {
+                    LocalVolumetricFog localVolumetricFog = GameObject.Find("/Environment/Lighting/BrightDay/Local Volumetric Fog")?.GetComponent<LocalVolumetricFog>();
+                    if (localVolumetricFog != null)
+                    {
+                        localVolumetricFog.parameters.albedo = fogColor.Value;
+                        Plugin.Logger.LogDebug($"Changed color for \"{localVolumetricFog.name}\": {fogColor}");
+                    }
+                }
+            }
         }
     }
 }

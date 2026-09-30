@@ -176,5 +176,24 @@ namespace Chameleon.Patches
 
             return false;
         }
+
+        [HarmonyPatch(typeof(TimeOfDay), nameof(TimeOfDay.SetWeatherBasedOnVariables))]
+        [HarmonyPostfix]
+        static void TimeOfDay_Post_SetWeatherBasedOnVariables(TimeOfDay __instance)
+        {
+            if (__instance.currentLevelWeather == LevelWeatherType.Foggy)
+            {
+                if (RoundManager.Instance.currentLevel.name == "AdamanceLevel")
+                {
+                    if (Configuration.amazingAdamance.Value)
+                        __instance.foggyWeather.parameters.albedo = new(0.1873164f, 0.2156863f, 0.1490196f); //new(0.19096f, 0.21f, 0.1624f)
+                }
+                else if (RoundManager.Instance.currentLevel.name == "EmbrionLevel")
+                {
+                    if (Configuration.nightmareEmbrion.Value)
+                        __instance.foggyWeather.parameters.albedo = new(0.2735849f, 0.0735582f, 0.0957834f); //new(0.27f, 0.2010638f, 0.2079575f)
+                }
+            }
+        }
     }
 }
